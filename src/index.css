@@ -1,0 +1,61 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #0891B2;
+  --color-primary-dark: #0E7490;
+  --color-secondary: #22D3EE;
+  --color-success: #22C55E;
+  --color-background: #ECFEFF;
+  --color-text: #164E63;
+  
+  --font-heading: "Lexend", sans-serif;
+  --font-body: "Source Sans 3", sans-serif;
+}
+
+@layer base {
+  body {
+    background-color: theme('colors.background');
+    color: theme('colors.text');
+    font-family: theme('fontFamily.body');
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: theme('fontFamily.heading');
+  }
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* SVG Line Animations */
+.svg-path-anim {
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+  animation: draw 2s ease-in-out forwards;
+}
+
+@keyframes draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
