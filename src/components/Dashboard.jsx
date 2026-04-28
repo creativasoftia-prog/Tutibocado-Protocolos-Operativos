@@ -9,10 +9,10 @@ const getIcon = (type) => {
     case 'Insumos y consumibles': return <ShoppingBag className="text-green-500" size={24} />;
     case 'Logística': return <Truck className="text-orange-500" size={24} />;
     case 'Atención al Cliente': return <MessageSquare className="text-pink-500" size={24} />;
-    case 'Tecnología': return <MonitorX className="text-purple-500" size={24} />;
+    case 'Tecnología/Soporte': return <MonitorX className="text-purple-500" size={24} />;
     case 'Recursos Humanos': return <Users className="text-indigo-500" size={24} />;
     case 'Sanidad': return <ShieldCheck className="text-emerald-500" size={24} />;
-    case 'Legal': return <Scale className="text-slate-600" size={24} />;
+    case 'Asuntos Gubernamentales': return <Scale className="text-slate-600" size={24} />;
     case 'Finanzas': return <FileText className="text-cyan-600" size={24} />;
     case 'Seguridad': return <ShieldAlert className="text-red-600" size={24} />;
     default: return <AlertTriangle className="text-gray-500" size={24} />;

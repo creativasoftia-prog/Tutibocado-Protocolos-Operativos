@@ -13,8 +13,8 @@ export const protocolsData = [
       'Paso 1: Verificar si es un equipo o todo el local. Desconectar equipos y revisar breakers (centro de carga).',
       'Paso 2: Verificar si el problema es general en la zona consultando con vecinos o exterior.',
       'Paso 3: Reportar al 071 (CFE) notificar la anomalía y avisar al supervisor de inmediato.',
-      'Paso 4: Esperar el tiempo estimado de CFE (Mantenimiento: 1-2h, Avería: 6-8h).',
-      'Paso 5: Si no se restablece y hay riesgo para producto, el Supervisor decide el retorno al CEDIS o traslado.'
+      'Paso 4: Si el corte es prolongado, iniciar registro manual de ventas (arqueo manual, F-03).',
+      'Paso 5: Esperar el tiempo estimado de CFE (Mantenimiento: 1-2h, Avería: 6-8h). Si hay riesgo para producto, el Supervisor decide retorno a CEDIS.'
     ],
     communicationRules: 'Notificar inmediatamente al supervisor. Si no se resuelve, escalar a Gerencia.',
     closingCriteria: 'Energía restablecida o producto resguardado en CEDIS. Documentar el incidente.',
@@ -57,9 +57,51 @@ export const protocolsData = [
       'Paso 3: Logística evalúa si puede resolver el día de hoy con entrega tardía o reenvío.',
       'Paso 4: Si Logística no puede resolver, el Supervisor escala a Gerencia si afecta la operación para toma de decisión.'
     ],
-    communicationRules: 'Comunicación directa líder -> supervisor -> logística.',
+    communicationRules: 'Comunicación directa líder -> supervisor -> logística. (Herramienta digital priorizada).',
     closingCriteria: 'Insumos entregados o caso escalado a Gerencia y documentado.',
     recommendations: 'Miércoles es el día oficial de entrega de velas y desechables.'
+  },
+  {
+    id: 'pedido_insumos',
+    code: 'I-02',
+    name: 'Pedido de insumos extemporáneo',
+    description: 'Protocolo ante la falta de insumos por olvido de pedido o necesidad urgente fuera de horario.',
+    trigger: 'Omisión del pedido antes de las 14:00 del lunes o necesidad no programada',
+    responsible: 'Líder de tienda',
+    areas: ['Operaciones', 'Almacén'],
+    priority: 'Media',
+    type: 'Insumos y consumibles',
+    textSteps: [
+      'Paso 1: Generar el pedido en la herramienta digital de Almacén. (No usar WhatsApp ni contactar a dirección).',
+      'Paso 2: Si es fuera del horario límite (Lunes 14:00), el pedido queda para el siguiente ciclo y se genera incidencia de extemporáneo.',
+      'Paso 3: Para emergencias justificadas (ej. perecederos/fruta), el supervisor evalúa y autoriza la urgencia.',
+      'Paso 4: Almacén atiende según disponibilidad, stock validado y calendario oficial.',
+      'Paso 5: Sucursal recepciona insumo firmando conformidad o levanta incidencia si hay diferencias.'
+    ],
+    communicationRules: 'Uso estricto de herramienta digital. No contactar directamente a Dirección o Almacén para saltar el proceso.',
+    closingCriteria: 'Insumos recibidos conformes o reprogramados para siguiente ciclo.',
+    recommendations: 'Asegurar enviar el listado antes de los lunes a las 14:00 para evitar bloqueos operativos.'
+  },
+  {
+    id: 'retorno_insumos',
+    code: 'I-03',
+    name: 'Retorno de insumos a CEDIS',
+    description: 'Procedimiento para devolver productos o insumos sobrantes, dañados o caducados al almacén (CEDIS).',
+    trigger: 'Necesidad de devolver insumos desde la sucursal',
+    responsible: 'Líder de tienda',
+    areas: ['Operaciones', 'Almacén'],
+    priority: 'Media',
+    type: 'Insumos y consumibles',
+    textSteps: [
+      'Paso 1: Solicitar autorización de retorno al supervisor indicando el motivo (ajuste, merma, caducidad o defecto).',
+      'Paso 2: Esperar la orden autorizada; ningún retorno procede hacia almacén sin este documento validado por el supervisor.',
+      'Paso 3: Entregar los insumos al repartidor junto con la orden de retorno firmada.',
+      'Paso 4: Almacén recepciona, clasifica el retorno y registra la entrada.',
+      'Paso 5: Confirmar en sistema el ajuste de inventario para mantener trazabilidad.'
+    ],
+    communicationRules: 'Comunicación sucursal -> supervisor -> almacén con orden documentada.',
+    closingCriteria: 'Producto retornado a CEDIS y documentado correctamente en inventario.',
+    recommendations: 'No entregar producto a logística sin la orden firmada por el supervisor.'
   },
   {
     id: 'producto_incidencia',
@@ -76,7 +118,7 @@ export const protocolsData = [
       'Paso 2: Notificar al supervisor sobre el estado del producto y la irregularidad detectada.',
       'Paso 3: Supervisor canaliza a Logística enviando el reporte con foto y solicita reemplazo o retorno.',
       'Paso 4: Logística dicta la instrucción o autoriza el retorno.',
-      'Paso 5: Retornar producto en el próximo viaje documentado y realizar inventario manual para ajuste.'
+      'Paso 5: Retornar producto documentado con orden del supervisor y realizar inventario manual para ajuste.'
     ],
     communicationRules: 'Documentar con foto y notificar al supervisor. No regresar al chofer sin autorización.',
     closingCriteria: 'Producto reemplazado, retornado o justificado en el inventario.',
@@ -86,17 +128,18 @@ export const protocolsData = [
     id: 'sistema',
     code: 'S-01',
     name: 'Falla de sistema / App / POS',
-    description: 'Procedimiento ante la caída del sistema de punto de venta o aplicación.',
-    trigger: 'App o POS no abre, falla o no permite cobrar',
+    description: 'Procedimiento ante la caída del sistema de punto de venta, aplicación o falla de red.',
+    trigger: 'App o POS no abre, falla, sobrecalentamiento de equipo o no permite cobrar',
     responsible: 'Líder de tienda',
     areas: ['Operaciones', 'Soporte Técnico', 'Gerencia'],
     priority: 'Alta',
-    type: 'Tecnología',
+    type: 'Tecnología/Soporte',
     textSteps: [
       'Paso 1: Líder notifica al supervisor con detalle del error, incluyendo mensaje y captura de pantalla si es posible.',
-      'Paso 2: Supervisor reporta a Soporte Técnico mediante canal directo y da seguimiento.',
-      'Paso 3: Si Soporte Técnico resuelve, se documenta y cierra el caso.',
-      'Paso 4: Si no se resuelve, Supervisor escala a Gerencia registrando tiempo de inactividad e impacto.'
+      'Paso 2: En caso de falla de terminal de cobro bancaria, utilizar terminal Clip como método de respaldo temporal.',
+      'Paso 3: Supervisor reporta a Soporte Técnico mediante canal directo y da seguimiento.',
+      'Paso 4: Si Soporte Técnico resuelve, se documenta y se regresa al método habitual de cobro/registro.',
+      'Paso 5: Si no se resuelve, Supervisor escala a Gerencia registrando tiempo de inactividad e impacto.'
     ],
     communicationRules: 'Enviar foto del error al supervisor. No intentar arreglos de hardware no autorizados.',
     closingCriteria: 'Sistema restablecido o plan de contingencia autorizado.',
@@ -109,19 +152,82 @@ export const protocolsData = [
     description: 'Gestión de incidencias de conducta o faltas del personal de la sucursal.',
     trigger: 'Falta injustificada, retardo mayor, mala conducta',
     responsible: 'Líder de tienda',
-    areas: ['Operaciones', 'Recursos Humanos'],
+    areas: ['Operaciones', 'Capital Humano'],
     priority: 'Media',
-    type: 'Recursos Humanos',
+    type: 'Capital Humano',
     textSteps: [
       'Paso 1: Líder de tienda notifica al supervisor describiendo la situación con evidencia si aplica.',
       'Paso 2: Verificar recurrencia. Si es 1ª vez: Llamada verbal + formato F-04 Reporte de Incidencias.',
       'Paso 3: Si es 2ª vez: Acta administrativa formal con registro en Capital Humano.',
       'Paso 4: Si es 3ª vez: Rehabilitación de capacitación o desvinculación, escalando a Gerencia.',
-      'Paso 5: Recursos Humanos da respaldo y seguimiento formal conforme al reglamento.'
+      'Paso 5: Capital Humano da respaldo y seguimiento formal conforme al reglamento.'
     ],
     communicationRules: 'Toda incidencia debe quedar documentada por escrito (F-04).',
     closingCriteria: 'Documento firmado y subido al expediente del colaborador.',
     recommendations: 'El sistema de comunicación se dirige al puesto, no a la persona. Mantener trato profesional.'
+  },
+  {
+    id: 'ticket_rh',
+    code: 'H-02',
+    name: 'Gestión de nómina, permisos y asistencias',
+    description: 'Canalización correcta de temas relacionados con nómina, permisos, préstamos y asistencias.',
+    trigger: 'Duda de pago, solicitud de permiso, préstamo o reporte de asistencia',
+    responsible: 'Cualquier colaborador',
+    areas: ['Capital Humano'],
+    priority: 'Baja',
+    type: 'Capital Humano',
+    textSteps: [
+      'Paso 1: El colaborador debe generar un ticket directamente en el sistema de Capital Humano.',
+      'Paso 2: Especificar la categoría correcta del ticket: nómina, asistencias, préstamos o permisos.',
+      'Paso 3: Capital Humano evalúa la solicitud y responde al colaborador a través de la misma plataforma.',
+      'Paso 4: En caso de aprobación de permisos, el colaborador informará al líder de tienda para prever cobertura.',
+      'Paso 5: Para soporte técnico relacionado a Capital Humano, enviar el ticket correspondiente al área.'
+    ],
+    communicationRules: 'No contactar directamente a Dirección o Administración para estos temas operativos.',
+    closingCriteria: 'Ticket resuelto y comunicado al empleado vía sistema.',
+    recommendations: 'Mantener la comunicación mediante el sistema centralizado de tickets.'
+  },
+  {
+    id: 'apoyo_emocional',
+    code: 'H-03',
+    name: 'Apoyo personal o emocional',
+    description: 'Protocolo de apoyo para colaboradores con situaciones personales o emocionales severas.',
+    trigger: 'Situación de crisis personal, estrés severo o necesidad de apoyo psicológico',
+    responsible: 'Cualquier colaborador',
+    areas: ['Capital Humano'],
+    priority: 'Media',
+    type: 'Capital Humano',
+    textSteps: [
+      'Paso 1: El colaborador puede generar un ticket confidencial en el sistema de Capital Humano.',
+      'Paso 2: Capital Humano recibe la solicitud manteniendo estricta confidencialidad del caso.',
+      'Paso 3: Se evalúa y asigna el apoyo pertinente (orientación, eventual contacto con psicólogo o bot de apoyo).',
+      'Paso 4: Capital Humano da seguimiento directo y continuo con el colaborador.',
+      'Paso 5: No canalizar estas situaciones a través de los supervisores operativos para proteger la privacidad.'
+    ],
+    communicationRules: 'Comunicación estrictamente confidencial a través del sistema de tickets de Capital Humano.',
+    closingCriteria: 'Colaborador estabilizado y recibiendo el apoyo necesario.',
+    recommendations: 'Garantizar un entorno de confianza y cero represalias.'
+  },
+  {
+    id: 'incumplimiento_protocolo',
+    code: 'H-04',
+    name: 'Incumplimiento de protocolo',
+    description: 'Acciones ante la detección de fallas reiteradas o incumplimiento de procedimientos formales.',
+    trigger: 'Detección de una violación evidente a los procesos y protocolos documentados',
+    responsible: 'Supervisor de tiendas',
+    areas: ['Supervisión', 'Capital Humano'],
+    priority: 'Alta',
+    type: 'Capital Humano',
+    textSteps: [
+      'Paso 1: El supervisor o jefe de área detecta e identifica el incumplimiento operativo.',
+      'Paso 2: Documentar la falla de forma inmediata y levantar incidencia en el sistema o formato correspondiente.',
+      'Paso 3: Evitar resolver el problema informalmente sin dejar documento o registro.',
+      'Paso 4: Notificar a Capital Humano sobre la incidencia generada en el expediente.',
+      'Paso 5: 3 incidencias documentadas son motivo de acción disciplinaria o causal de baja según reglamento.'
+    ],
+    communicationRules: 'Dejar evidencia escrita de toda observación. Uso del sistema de incidencias de forma obligatoria.',
+    closingCriteria: 'Incidencia firmada y reportada a Capital Humano.',
+    recommendations: 'La mejora continua requiere registro constante; evitar excepciones verbales.'
   },
   {
     id: 'plaga',
@@ -148,20 +254,21 @@ export const protocolsData = [
     id: 'autoridad',
     code: 'A-01',
     name: 'Visita de autoridad',
-    description: 'Cómo actuar ante inspecciones de autoridades locales o sanitarias.',
-    trigger: 'Llegada de inspectores o autoridades a la sucursal',
+    description: 'Cómo actuar ante inspecciones de autoridades locales, dependencias gubernamentales o sanitarias.',
+    trigger: 'Llegada de inspectores, personal del Ayuntamiento, IMSS u otra dependencia',
     responsible: 'Líder de tienda',
-    areas: ['Operaciones', 'Gerencia', 'Legal'],
+    areas: ['Operaciones', 'Gerencia', 'Visitas de Dependencias Gubernamentales'],
     priority: 'Crítica',
-    type: 'Legal',
+    type: 'Visitas de Dependencias Gubernamentales',
     textSteps: [
       'Paso 1: Atender con respeto. No comentar nada sin supervisión. Contactar al supervisor de inmediato.',
       'Paso 2: Si es Ayuntamiento (licencias/predial): Supervisor acompaña, documenta y reporta a Gerencia.',
-      'Paso 3: Si es COFEPRIS/IMSS: Escalar a Gerencia de inmediato. No firmar nada sin autorización.',
-      'Paso 4: Visita documentada y acciones definidas por Gerencia.'
+      'Paso 3: Si es COFEPRIS/IMSS: Escalar a Gerencia de inmediato. No firmar nada ni recibir inspección sin autorización.',
+      'Paso 4: En caso de cualquier requerimiento legal, mantener canal con el área de Visitas de Dependencias Gubernamentales.',
+      'Paso 5: Visita documentada y acciones posteriores definidas por Gerencia.'
     ],
-    communicationRules: 'Avisar inmediatamente al supervisor. Pedir identificación a los inspectores.',
-    closingCriteria: 'Acta de visita firmada (con autorización) y requerimientos atendidos.',
+    communicationRules: 'Avisar inmediatamente al supervisor. Pedir identificación oficial a los inspectores.',
+    closingCriteria: 'Acta de visita firmada (solo con autorización) y requerimientos atendidos.',
     recommendations: 'Tener siempre a la mano la carpeta de permisos y licencias actualizadas.'
   },
   {
@@ -178,7 +285,7 @@ export const protocolsData = [
       'Paso 1: Líder documenta con evidencia fotográfica, realiza inventario manual y notifica al supervisor de inmediato.',
       'Paso 2: Supervisor y Contabilidad abren auditoría interna revisando cierres, arqueos y movimientos.',
       'Paso 3: Si se identifica el origen del faltante: Aplicar acción disciplinaria o de mejora.',
-      'Paso 4: Si no se identifica: Escalar a Gerencia para investigación adicional o acción legal.'
+      'Paso 4: Si no se identifica: Escalar a Gerencia para investigación adicional o acción Asuntos Gubernamentales.'
     ],
     communicationRules: 'Manejo confidencial y directo con el supervisor y contabilidad.',
     closingCriteria: 'Origen identificado y acción aplicada, o caso escalado formalmente.',
@@ -204,6 +311,27 @@ export const protocolsData = [
     communicationRules: 'Cierres directos al Contador. Facturas informadas a Contador y Supervisor.',
     closingCriteria: 'Cierre entregado o factura enviada al cliente.',
     recommendations: 'Validar depósitos y transferencias en el momento de la compra.'
+  },
+  {
+    id: 'arqueo_manual',
+    code: 'F-03',
+    name: 'Arqueo manual por corte',
+    description: 'Procedimiento de registro de ventas y cuadre de caja durante falta de energía eléctrica o caída del POS.',
+    trigger: 'Corte de luz prolongado o falla del sistema impidiendo cobro digital',
+    responsible: 'Líder de tienda',
+    areas: ['Operaciones', 'Finanzas'],
+    priority: 'Media',
+    type: 'Finanzas',
+    textSteps: [
+      'Paso 1: Iniciar registro de ventas manualmente en formato designado o libreta.',
+      'Paso 2: Anotar fecha, hora, productos vendidos, total cobrado y método de pago (priorizar efectivo).',
+      'Paso 3: Al restablecerse la luz o el sistema, capturar todas las ventas manuales en el POS.',
+      'Paso 4: Realizar el arqueo sumando el efectivo físico contra el reporte de ventas manuales.',
+      'Paso 5: Reportar el cierre y cualquier discrepancia al contador y supervisor.'
+    ],
+    communicationRules: 'Avisar al supervisor del inicio de cobro manual.',
+    closingCriteria: 'Ventas manuales conciliadas y capturadas en sistema exitosamente.',
+    recommendations: 'Mantener orden claro en las anotaciones para evitar descuadres.'
   },
   {
     id: 'traspaso_turno',
@@ -275,7 +403,7 @@ export const protocolsData = [
     description: 'Actuación frente a asaltos, accidentes graves o desastres naturales.',
     trigger: 'Situación que ponga en riesgo la vida humana en la sucursal',
     responsible: 'Todo el personal',
-    areas: ['Operaciones', 'Gerencia', 'Seguridad Pública'],
+    areas: ['Operaciones', 'Seguridad'],
     priority: 'Crítica',
     type: 'Seguridad',
     textSteps: [
@@ -287,5 +415,47 @@ export const protocolsData = [
     communicationRules: 'Llamar al 911 de inmediato y posteriormente al supervisor.',
     closingCriteria: 'Personal a salvo, autoridades pertinentes a cargo y reporte de incidencias completado.',
     recommendations: 'Mantener la calma, no oponer resistencia en asaltos y seguir indicaciones de autoridades.'
+  },
+  {
+    id: 'extorsion',
+    code: 'S-02',
+    name: 'Llamada de extorsión',
+    description: 'Procedimiento a seguir ante llamadas telefónicas de extorsión o amenazas directas.',
+    trigger: 'Llamada amenazante exigiendo dinero o información, o amenaza directa',
+    responsible: 'Cualquier colaborador',
+    areas: ['Operaciones', 'Seguridad'],
+    priority: 'Alta',
+    type: 'Seguridad',
+    textSteps: [
+      'Paso 1: Mantener la calma y colgar la llamada inmediatamente sin dar información.',
+      'Paso 2: No proporcionar NUNCA información de la empresa, dueños, ganancias o personal.',
+      'Paso 3: Notificar al supervisor de inmediato sobre la situación. Si la amenaza es física, contactar al 911.',
+      'Paso 4: Registrar y documentar el número telefónico, fecha y hora del incidente.',
+      'Paso 5: Supervisor escala el caso y alerta a las demás sucursales como prevención.'
+    ],
+    communicationRules: 'Colgar inmediatamente, no entablar diálogo, notificar al supervisor.',
+    closingCriteria: 'Amenaza registrada, número bloqueado y reporte emitido a gerencia.',
+    recommendations: 'Anotar cualquier detalle que permita identificar el origen de la llamada sin hablar.'
+  },
+  {
+    id: 'vandalismo',
+    code: 'S-03',
+    name: 'Personas extrañas o vandalismo',
+    description: 'Acciones ante la presencia de personas sospechosas o actos de vandalismo.',
+    trigger: 'Presencia prolongada de sospechosos, intentos de robo, vandalismo en garita o tienda',
+    responsible: 'Líder de tienda',
+    areas: ['Operaciones', 'Seguridad'],
+    priority: 'Alta',
+    type: 'Seguridad',
+    textSteps: [
+      'Paso 1: No confrontar a la persona o personas bajo ninguna circunstancia.',
+      'Paso 2: Resguardarse dentro del local y asegurar accesos si la situación lo amerita.',
+      'Paso 3: Llamar al 911 solicitando apoyo de seguridad pública en la ubicación exacta.',
+      'Paso 4: Informar al supervisor inmediatamente sobre el desarrollo de la situación.',
+      'Paso 5: Una vez superado el evento, generar reporte de incidencias con evidencia (fotos/videos).'
+    ],
+    communicationRules: 'Priorizar seguridad propia. Mantener línea abierta con supervisor/911.',
+    closingCriteria: 'Situación bajo control policial y reporte de incidencias elaborado.',
+    recommendations: 'Mantener siempre cerrados accesos no públicos de la sucursal.'
   }
 ];
