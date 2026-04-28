@@ -133,7 +133,7 @@ const SvgDiagram = ({ protocolId, protocolName }) => {
       {/* Step 5 */}
       <motion.g custom={8} variants={nodeVariant} initial="hidden" animate="visible">
         <rect x="140" y="488" width="400" height="48" rx="8" fill="#FFF1F2" stroke="#FDA4AF" strokeWidth="1.5" filter="url(#shadow)"/>
-        <text x="340" y="506" textAnchor="middle" dominantBaseline="central" fontSize="13" fontWeight="600" fill="#BE123C">Paso 5: Retorno al CERIS o traslado</text>
+        <text x="340" y="506" textAnchor="middle" dominantBaseline="central" fontSize="13" fontWeight="600" fill="#BE123C">Paso 5: Retorno al CEDIS o traslado</text>
         <text x="340" y="524" textAnchor="middle" dominantBaseline="central" fontSize="11" fill="#E11D48">Inventario manual · Retorno documentado · Cierre</text>
       </motion.g>
     </svg>

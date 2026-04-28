@@ -14,10 +14,10 @@ export const protocolsData = [
       'Paso 2: Verificar si el problema es general en la zona consultando con vecinos o exterior.',
       'Paso 3: Reportar al 071 (CFE) notificar la anomalía y avisar al supervisor de inmediato.',
       'Paso 4: Esperar el tiempo estimado de CFE (Mantenimiento: 1-2h, Avería: 6-8h).',
-      'Paso 5: Si no se restablece y hay riesgo para producto, el Supervisor decide el retorno al CERIS o traslado.'
+      'Paso 5: Si no se restablece y hay riesgo para producto, el Supervisor decide el retorno al CEDIS o traslado.'
     ],
     communicationRules: 'Notificar inmediatamente al supervisor. Si no se resuelve, escalar a Gerencia.',
-    closingCriteria: 'Energía restablecida o producto resguardado en CERIS. Documentar el incidente.',
+    closingCriteria: 'Energía restablecida o producto resguardado en CEDIS. Documentar el incidente.',
     recommendations: 'No abrir refrigeradores innecesariamente para mantener el frío.'
   },
   {
