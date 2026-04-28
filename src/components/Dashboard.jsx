@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
-import { Search, Filter, AlertTriangle, ShieldCheck, Zap, Package, ShieldAlert, MonitorX, Users, Scale, FileText, ChevronRight } from 'lucide-react';
+import { Search, Filter, AlertTriangle, ShieldCheck, Zap, Package, ShieldAlert, MonitorX, Users, Scale, FileText, ChevronRight, Truck, MessageSquare, ShoppingBag } from 'lucide-react';
 
 // Icon mapping based on protocol type
 const getIcon = (type) => {
   switch (type) {
     case 'Infraestructura': return <Zap className="text-amber-500" size={24} />;
     case 'Operativo': return <Package className="text-blue-500" size={24} />;
+    case 'Insumos y consumibles': return <ShoppingBag className="text-green-500" size={24} />;
+    case 'Logística': return <Truck className="text-orange-500" size={24} />;
+    case 'Atención al Cliente': return <MessageSquare className="text-pink-500" size={24} />;
     case 'Tecnología': return <MonitorX className="text-purple-500" size={24} />;
     case 'Recursos Humanos': return <Users className="text-indigo-500" size={24} />;
     case 'Sanidad': return <ShieldCheck className="text-emerald-500" size={24} />;
