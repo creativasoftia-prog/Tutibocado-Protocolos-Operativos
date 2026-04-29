@@ -459,6 +459,50 @@ export const protocolsData = [
     closingCriteria: 'Situación bajo control policial y reporte de incidencias elaborado.',
   },
   {
+    id: 'promociones_pastel',
+    code: 'S-03A',
+    name: 'Pastel con poca caducidad - Promoción',
+    description: 'Procedimiento cuando a un pastel le faltan 2 días o menos para vencer y se decide ofrecerlo con descuento.',
+    trigger: 'Pastel entero con 2 días o menos de caducidad. Se busca venderlo rápido con descuento.',
+    responsible: 'Operario de tienda',
+    areas: ['Supervisor', 'Gerencia (si no se vende)'],
+    priority: 'Alta',
+    type: 'Promociones',
+    textSteps: [
+      'Paso 1: Revisar la fecha de caducidad del pastel. Si le faltan 2 días o menos, avisar al supervisor.',
+      'Paso 2: El supervisor autoriza el porcentaje de descuento (ejemplo: 20%, 30% o 50% según la política de la tienda).',
+      'Paso 3: Colocar una etiqueta o letrero visible en el pastel que diga "PRONTO A VENCER - DESCUENTO" con el precio rebajado.',
+      'Paso 4: Ubicar el pastel en un lugar visible dentro del refrigerador o vitrina para que los clientes lo vean fácilmente.',
+      'Paso 5: Registrar la promoción en el sistema (si aplica) o anotar el movimiento en un cuaderno de mermas.',
+      'Paso 6: Si el pastel no se vende en el día, al final de la jornada avisar al supervisor para decidir si se rebaja más o se reasigna.'
+    ],
+    communicationRules: 'Siempre avisar al supervisor antes de cambiar el precio. No hacer descuentos por cuenta propia. Colocar la etiqueta de descuento bien visible.',
+    closingCriteria: 'El pastel se vende en promoción o se agota el día y se decide otra acción (rebanar o reasignar).',
+    recommendations: 'Ofrecer el pastel promocional a clientes frecuentes y ubicarlo a la altura de los ojos.'
+  },
+  {
+    id: 'rebanadas_pastel',
+    code: 'S-03B',
+    name: 'Pastel con poca caducidad - Rebanadas',
+    description: 'Procedimiento cuando a un pastel le faltan 2 días o menos y se decide venderlo por porciones. La tienda coordina, pero no realiza el rebanado.',
+    trigger: 'Pastel entero con 2 días o menos de caducidad. Se decide venderlo por rebanadas en lugar de entero.',
+    responsible: 'Operario de tienda (coordina el rebanado, no lo hace)',
+    areas: ['Supervisor', 'Area que rebana (obrador, otra tienda o pasteleria)'],
+    priority: 'Alta',
+    type: 'Promociones',
+    textSteps: [
+      'Paso 1: Revisar la fecha de caducidad del pastel. Si le faltan 2 días o menos, avisar al supervisor.',
+      'Paso 2: El supervisor confirma que se va a vender por rebanadas (porciones individuales).',
+      'Paso 3: Notificar al area o persona encargada de rebanar pasteles (puede ser otra tienda, obrador o personal autorizado). La tienda no hace el rebanado.',
+      'Paso 4: Una vez rebanado, cada porcion se empaca y etiqueta con precio, fecha de caducidad (la misma del pastel original) y el letrero "PORCION".',
+      'Paso 5: Colocar las rebanadas en el refrigerador o vitrina en un lugar visible.',
+      'Paso 6: Si sobran rebanadas al final del dia, avisar al supervisor para decidir si se promocionan o se desechan.'
+    ],
+    communicationRules: 'Ningun empleado de la tienda debe rebanar el pastel si no esta autorizado. El rebanado lo hace personal especializado. Avisar al supervisor de cualquier sobrante.',
+    closingCriteria: 'Se venden todas las rebanadas o las sobrantes se promocionan o desechan con autorizacion.',
+    recommendations: 'Calcular cuantas rebanadas salen de cada pastel para fijar un precio justo y revisar que todas esten bien etiquetadas.'
+  },
+  {
     id: 'solicitud_insumo',
     code: 'P-01',
     name: 'Solicitud de pedidos de insumo',

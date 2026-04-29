@@ -10,7 +10,7 @@ function App() {
     <div className="min-h-screen bg-[#ECFEFF] text-[#164E63]">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-cyan-100 shadow-sm px-6 py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
+        <div className="max-w-[1500px] mx-auto flex items-center justify-between">
           <div 
             className="flex items-center gap-3 cursor-pointer"
             onClick={() => setSelectedProtocol(null)}
@@ -37,12 +37,14 @@ function App() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+      <main className="py-8">
         {selectedProtocol ? (
-          <ProtocolDetail 
-            protocol={selectedProtocol} 
-            onBack={() => setSelectedProtocol(null)} 
-          />
+          <div className="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8">
+            <ProtocolDetail 
+              protocol={selectedProtocol} 
+              onBack={() => setSelectedProtocol(null)} 
+            />
+          </div>
         ) : (
           <Dashboard 
             protocols={protocolsData} 
