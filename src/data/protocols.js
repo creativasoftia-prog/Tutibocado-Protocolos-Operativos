@@ -107,22 +107,23 @@ export const protocolsData = [
     id: 'producto_incidencia',
     code: 'L-01',
     name: 'Incidencia con producto',
-    description: 'Acciones ante producto dañado, mal etiquetado, de más o sin asignar.',
-    trigger: 'Recepción de producto con irregularidades o sin registro en sistema',
+    description: 'Acciones ante producto dañado, mal etiquetado, excedente o sin asignación',
+    trigger: 'Recepción de producto con daño visible, mal etiquetado, cantidad incorrecta, excedente no solicitado o producto sin registro/asignación en sistema.',
     responsible: 'Líder de tienda',
-    areas: ['Operaciones', 'Logística'],
+    areas: ['Supervisor inmediato', 'Operaciones', 'Logística'],
     priority: 'Media',
     type: 'Logística',
     textSteps: [
-      'Paso 1: Recibir el producto y documentar inmediatamente la incidencia con evidencia fotográfica.',
-      'Paso 2: Notificar al supervisor sobre el estado del producto y la irregularidad detectada.',
-      'Paso 3: Supervisor canaliza a Logística enviando el reporte con foto y solicita reemplazo o retorno.',
-      'Paso 4: Logística dicta la instrucción o autoriza el retorno.',
-      'Paso 5: Retornar producto documentado con orden del supervisor y realizar inventario manual para ajuste.'
+      'Paso 1: Al momento de la entrega, inspeccionar el producto recibido. Si presenta daño físico, empaque abierto, caducidad comprometida, etiquetado incorrecto o alguna irregularidad visible, no recibir el producto. Tomar evidencia fotográfica clara del estado en que llega.',
+      'Paso 2: Realizar el procedimiento correspondiente en el formato F-04 (Rechazo de Producto), registrando de forma precisa: nombre del producto, cantidad afectada, motivo del rechazo y evidencia fotográfica anexada.',
+      'Paso 3: Notificar de inmediato al supervisor responsable, informando la incidencia detectada y compartiendo la evidencia recopilada.',
+      'Paso 4: El supervisor deberá comunicarse con el área de Logística para reportar la situación y solicitar la acción correctiva correspondiente, ya sea reemplazo del producto, autorización de retorno o indicaciones adicionales.',
+      'Paso 5: El área de Logística evaluará la incidencia y dictará el procedimiento a seguir respecto al producto rechazado.',
+      'Paso 6: Una vez autorizada la acción por supervisor y Logística, retornar el producto al repartidor debidamente documentado. Si aplica, realizar el ajuste manual de inventario para mantener existencias correctas en sistema.'
     ],
-    communicationRules: 'Documentar con foto y notificar al supervisor. No regresar al chofer sin autorización.',
-    closingCriteria: 'Producto reemplazado, retornado o justificado en el inventario.',
-    recommendations: 'Toda salida o retorno debe documentarse para no afectar la métrica de merma.'
+    communicationRules: 'Toda incidencia debe reportarse en el momento de la entrega. Siempre tomar evidencia fotográfica clara. No aceptar ni devolver producto sin autorización del supervisor. Todo rechazo debe quedar registrado en formato F-04. Mantener comunicación inmediata con las áreas involucradas hasta cierre del caso.',
+    closingCriteria: 'Producto reemplazado correctamente. Producto retornado y documentado. Ajuste de inventario realizado (si aplica). Incidencia validada y concluida por supervisor.',
+    recommendations: 'Revisar cada entrega antes de firmar de recibido. Documentar cantidades exactas y condición del producto. Conservar evidencias hasta el cierre del caso. Actuar de inmediato para evitar afectaciones en inventario, venta y merma.'
   },
   {
     id: 'sistema',
