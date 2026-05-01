@@ -854,4 +854,216 @@ export const protocolsData = [
     closingCriteria: 'POS operando y todas las transacciones manuales capturadas.',
     recommendations: 'Uso de UPS (no-break) obligatorio y capacitación en cobros manuales.'
   }
+  ,
+  {
+    id: 'apertura_sucursal',
+    code: 'O-01',
+    name: 'Apertura de sucursal',
+    description: 'Procedimiento para preparar y abrir la sucursal al público al inicio del día o turno.',
+    trigger: 'Inicio del día o del turno de mañana, previo a la atención al público.',
+    responsible: 'Encargado de apertura',
+    areas: ['Supervisor de turno'],
+    priority: 'Alta',
+    type: 'Operativo',
+    textSteps: [
+      'Paso 1 — Acceso y condiciones físicas del local: Al llegar a la sucursal, verificar que el acceso esté en buen estado, sin daños visibles en puertas, cerraduras o fachada. Si se detecta alguna anomalía como puerta forzada, vidrios rotos o señales de intrusión, no entrar al local y contactar al supervisor de inmediato siguiendo el protocolo S-03.',
+      'Paso 2 — Encendido y condiciones básicas: Encender luces, sistema de caja, refrigerador y demás equipos necesarios. Verificar que la temperatura del refrigerador esté dentro del rango correcto (4–15°C). Si algún equipo no enciende o presenta falla, referirse al protocolo correspondiente según el equipo afectado.',
+      'Paso 3 — Abrir al público: La sucursal debe abrir en el horario establecido sin demora. Atender al cliente y continuar con tareas pendientes durante el turno si llega un cliente antes de completar el checklist.',
+      'Paso 4 — Completar responsabilidades del turno: Completar el checklist de apertura siguiendo el formulario F-09A (verificación de fondo de caja, inventario F-03, vitrina, limpieza, insumos, papel de impresora y bitácora del turno anterior). Todo debe quedar completado antes de la mitad del turno.',
+      'Paso 5 — Registro y confirmación: Firmar el F-09A como encargado de apertura y notificar al supervisor si existe alguna novedad, faltante o condición anormal detectada durante el proceso.'
+    ],
+    communicationRules: 'Cualquier anomalía detectada al abrir debe reportarse al supervisor antes de continuar con la operación normal. No omitir novedades aunque parezcan menores.',
+    closingCriteria: 'Sucursal abierta al público, F-09A completado y firmado, novedades reportadas si aplica.',
+    recommendations: 'La venta no puede esperar, las responsabilidades sí pueden distribuirse durante el turno. Nunca retrasar la apertura por completar el checklist.'
+  },
+  {
+    id: 'cierre_sucursal',
+    code: 'O-04',
+    name: 'Cierre de sucursal',
+    description: 'Procedimiento para cerrar la sucursal al final del día o turno asegurando registros y seguridad del local.',
+    trigger: 'Final del día o del último turno, previo al cierre físico del local.',
+    responsible: 'Encargado de cierre',
+    areas: ['Supervisor de turno'],
+    priority: 'Alta',
+    type: 'Operativo',
+    textSteps: [
+      'Paso 1 — Responsabilidades previas al cierre: Completar tareas que no interfieran con la atención: limpieza, revisión final de inventario (F-03), registro de novedades en bitácora F-01 y anotación de compromisos para el siguiente turno.',
+      'Paso 2 — Corte de caja: Realizar el corte de caja con dos personas presentes (si aplica), llenando el formato F-02. Registrar total en efectivo, otros medios, vales y cortesías. Documentar y notificar cualquier diferencia al supervisor.',
+      'Paso 3 — Cierre al público y seguridad del local: Tras atender al último cliente, cerrar la sucursal, apagar equipos, asegurar refrigerador y verificar accesos.',
+      'Paso 4 — Reporte diario: Enviar el reporte diario de operación (F-05) al supervisor antes de retirarse, incluyendo novedades relevantes.',
+      'Paso 5 — Entrega de accesos: Entregar llaves y accesos al siguiente encargado si aplica, o resguardarlos según procedimiento. Firmar F-09C como encargado de cierre.'
+    ],
+    communicationRules: 'No retirarse sin haber enviado el F-05 y sin haber notificado al supervisor cualquier novedad pendiente. El cierre físico es el último paso.',
+    closingCriteria: 'F-09C completado y firmado, F-02 y F-05 enviados al supervisor, local asegurado.',
+    recommendations: 'El orden correcto es: responsabilidades primero, cierre al público después, aseguramiento del local al final. Nunca dejar tareas de registro pendientes.'
+  },
+  {
+    id: 'pedido_evento_error',
+    code: 'O-05',
+    name: 'Pedido de evento con error',
+    description: 'Actuación cuando un pedido de evento llega incompleto, con errores o no registrado.',
+    trigger: 'Cliente llega a recoger su pedido de evento y se detecta que no está listo, está incompleto, tiene error en decoración/personalización o no aparece en sistema.',
+    responsible: 'Encargado de turno',
+    areas: ['Supervisor de turno'],
+    priority: 'Alta',
+    type: 'Operativo',
+    textSteps: [
+      'Paso 1 — Atender al cliente con calma y empatía: Recibir al cliente con amabilidad. Pedir un momento para verificar internamente y no discutir ni culpar a otras áreas frente al cliente.',
+      'Paso 2 — Verificar en sistema: Buscar el pedido por nombre, número o fecha y revisar observaciones o discrepancias.',
+      'Paso 3 — Notificar al supervisor de inmediato: Informar con todos los detalles; el supervisor decide el curso de acción. No ofrecer soluciones sin autorización.',
+      'Paso 4 — Comunicar al cliente con transparencia: Tras la indicación del supervisor, explicar la solución o tiempos estimados al cliente de forma clara.',
+      'Paso 5 — Documentar el incidente: Registrar la situación en la bitácora F-01 con nombre del cliente, tipo de error, acciones y resultado.'
+    ],
+    communicationRules: 'Nunca decir que el error fue de otra área. Mantener tono profesional. Toda decisión de compensación pasa por el supervisor.',
+    closingCriteria: 'Cliente atendido con solución concreta, incidente registrado en F-01 y supervisor informado del cierre del caso.',
+    recommendations: 'Ante la duda, escalar al supervisor antes de ofrecer alternativas. Evitar promesas incumplidas.'
+  },
+  {
+    id: 'producto_agotado_turno',
+    code: 'O-06',
+    name: 'Producto agotado durante turno',
+    description: 'Procedimiento cuando un producto del catálogo se agota durante el horario de atención.',
+    trigger: 'Un producto del catálogo se agota durante el horario de atención y clientes continúan solicitándolo.',
+    responsible: 'Encargado de turno',
+    areas: ['Supervisor de turno'],
+    priority: 'Media',
+    type: 'Operativo',
+    textSteps: [
+      'Paso 1 — Confirmar el agotamiento: Verificar físicamente en vitrina, bodega y reservas antes de declarar agotado.',
+      'Paso 2 — Informar al cliente con alternativas: Comunicar amablemente y ofrecer opciones similares del catálogo.',
+      'Paso 3 — Notificar al supervisor: Indicar hora aproximada de agotamiento y demanda observada.',
+      'Paso 4 — Actualizar la presentación de vitrina: Reorganizar la vitrina para evitar espacios vacíos.',
+      'Paso 5 — Registrar en bitácora: Anotar en F-01 producto, hora y si hubo clientes no atendidos.'
+    ],
+    communicationRules: 'Ofrecer alternativas antes de decir que no hay stock. Informar al supervisor durante el turno.',
+    closingCriteria: 'Cliente informado y atendido con alternativa, vitrina reorganizada, novedad registrada en F-01.',
+    recommendations: 'Si un producto se agota con frecuencia, notificar al supervisor para revisar volumen de pedido.'
+  },
+  {
+    id: 'devolucion_cambio',
+    code: 'C-02',
+    name: 'Devolución o cambio de producto',
+    description: 'Procedimiento para gestionar devoluciones, cambios o reembolsos solicitados por clientes.',
+    trigger: 'Cliente regresa solicitando cambio, devolución o reembolso por un producto adquirido.',
+    responsible: 'Encargado de turno',
+    areas: ['Supervisor de turno'],
+    priority: 'Media',
+    type: 'Atención al Cliente',
+    textSteps: [
+      'Paso 1 — Escuchar al cliente y entender la solicitud: Recibir con amabilidad y comprender motivo y detalles de la compra.',
+      'Paso 2 — Verificar las condiciones del producto: Inspeccionar físicamente y evaluar si procede la devolución o cambio.',
+      'Paso 3 — Notificar al supervisor: Solicitar autorización antes de proceder con cualquier acción.',
+      'Paso 4 — Ejecutar la acción en sistema: Si autorizado, procesar la devolución o cambio siguiendo el flujo del POS o sistema.',
+      'Paso 5 — Confirmar con el cliente y cerrar: Informar claramente la acción realizada y canalizar a C-01 si corresponde.'
+    ],
+    communicationRules: 'Ninguna devolución o cambio procede sin autorización del supervisor. No prometer reembolsos sin verificar.',
+    closingCriteria: 'Acción ejecutada en sistema, cliente informado y satisfecho, o caso escalado formalmente.',
+    recommendations: 'Mantener trato empático para preservar la relación con el cliente.'
+  },
+  {
+    id: 'cliente_agresivo',
+    code: 'C-03',
+    name: 'Cliente con comportamiento agresivo',
+    description: 'Protocolo para proteger al personal y clientes frente a comportamientos agresivos dentro de la sucursal.',
+    trigger: 'Cliente eleva el tono, amenaza, insulta o representa riesgo para personal o clientes.',
+    responsible: 'Encargado de turno',
+    areas: ['Supervisor de turno', 'Autoridades si aplica'],
+    priority: 'Alta',
+    type: 'Atención al Cliente',
+    textSteps: [
+      'Paso 1 — Mantener la calma y no escalar: Hablar en tono bajo y tranquilo, evitando confrontación.',
+      'Paso 2 — No ceder a presiones fuera de política: No ofrecer compensaciones no autorizadas.',
+      'Paso 3 — Notificar al supervisor de inmediato: Describir la situación y nivel de agresividad.',
+      'Paso 4 — Resguardar al resto del personal y clientes: Mantener distancia y priorizar seguridad.',
+      'Paso 5 — Contactar al 911 si hay amenaza física: Llamar inmediatamente si hay riesgo real y notificar al supervisor.',
+      'Paso 6 — Documentar el incidente: Registrar en F-01 con hora, descripción, acciones y resultado.'
+    ],
+    communicationRules: 'Nunca confrontar directamente al cliente agresivo. Priorizar la seguridad y documentar todo.',
+    closingCriteria: 'Situación controlada, cliente retirado o atendido, personal seguro e incidente documentado.',
+    recommendations: 'Si un cliente tiene episodios recurrentes, considerar restringir su acceso según decisión del supervisor.'
+  },
+  {
+    id: 'error_cobro',
+    code: 'F-05',
+    name: 'Error en cobro',
+    description: 'Procedimiento para corregir cobros incorrectos a clientes durante el turno o en cierre.',
+    trigger: 'Se detecta que a un cliente se le cobró una cantidad incorrecta durante el turno o en el corte de caja.',
+    responsible: 'Encargado de turno',
+    areas: ['Supervisor de turno', 'Contador si aplica'],
+    priority: 'Media',
+    type: 'Finanzas',
+    textSteps: [
+      'Paso 1 — Identificar el error: Determinar si fue cobro de más, de menos, producto no registrado o método incorrecto.',
+      'Paso 2 — Notificar al supervisor antes de corregir: Informar monto, producto y tipo de error; esperar autorización.',
+      'Paso 3 — Corrección con cliente presente: Devolver diferencia con autorización o aplicar ajuste según indicación del supervisor.',
+      'Paso 4 — Corrección sin cliente presente: Documentar en F-02 la diferencia y explicación; supervisor/contador evalúan seguimiento.',
+      'Paso 5 — Registrar el incidente: Anotar en F-01 causa probable y acción tomada.'
+    ],
+    communicationRules: 'Ninguna corrección en caja sin autorización del supervisor. Notificar al contador cuando corresponda.',
+    closingCriteria: 'Error corregido, cliente atendido si aplica, diferencia documentada en F-02 y novedad en F-01.',
+    recommendations: 'Confirmar monto con el cliente antes de procesar el pago. Leer el total en voz alta.'
+  },
+  {
+    id: 'gestion_anticipos',
+    code: 'F-06',
+    name: 'Gestión de anticipos y pedidos de evento',
+    description: 'Proceso para registrar pedidos de evento y gestionar anticipos correctamente.',
+    trigger: 'Cliente realiza un pedido de evento dejando un anticipo o pago por adelantado.',
+    responsible: 'Encargado de turno',
+    areas: ['Supervisor de turno', 'Contador'],
+    priority: 'Media',
+    type: 'Finanzas / Operativo',
+    textSteps: [
+      'Paso 1 — Atención inicial al cliente: Identificar producto, fecha, personalizaciones y datos de contacto sin comprometer disponibilidad sin verificar.',
+      'Paso 2 — Registrar el pedido en sistema: Ingresar todos los detalles siguiendo el flujo del POS.',
+      'Paso 3 — Gestión del anticipo: Registrar pago en sistema y entregar comprobante con monto, saldo y fecha de entrega.',
+      'Paso 4 — Notificar al supervisor y al contador: Informar especialmente cuando hay personalización o monto significativo.',
+      'Paso 5 — Confirmar detalles con el cliente antes de su salida: Repetir producto, fecha, monto y saldo.'
+    ],
+    communicationRules: 'Todo pedido debe quedar registrado en sistema antes de recibir pago. No aceptar anticipos sin comprobante.',
+    closingCriteria: 'Pedido registrado, anticipo documentado, comprobante entregado, supervisor y contador notificados.',
+    recommendations: 'Consultar con supervisor cuando el pedido sea muy específico o inusual antes de comprometer fechas.'
+  },
+  {
+    id: 'accidente_cliente',
+    code: 'S-04',
+    name: 'Accidente de cliente dentro de la sucursal',
+    description: 'Actuación frente a accidentes de clientes dentro de la sucursal que requieran atención inmediata.',
+    trigger: 'Cliente sufre caída, golpe, corte, reacción alérgica u otro incidente físico durante su visita.',
+    responsible: 'Encargado de turno',
+    areas: ['Supervisor de turno', 'Autoridades si aplica'],
+    priority: 'Alta',
+    type: 'Seguridad',
+    textSteps: [
+      'Paso 1 — Atender a la persona de inmediato: Preguntar cómo se siente, ofrecer primeros auxilios si es leve, llamar al 911 si es grave.',
+      'Paso 2 — Notificar al supervisor de inmediato: Describir lo ocurrido y solicitar indicaciones.',
+      'Paso 3 — No reconocer responsabilidad: Evitar frases que impliquen admisión de culpa; las declaraciones formales pasan por supervisor/gerencia.',
+      'Paso 4 — Documentar el incidente: Registrar en F-01 con hora, lugar, descripción, acciones y resultado; tomar evidencia si procede.',
+      'Paso 5 — Seguimiento con gerencia: Supervisor informa a gerencia para evaluar implicaciones legales y acciones preventivas.'
+    ],
+    communicationRules: 'Priorizar bienestar de la persona. Notificar al supervisor antes de que el cliente se retire. No dar información a terceros sin autorización de gerencia.',
+    closingCriteria: 'Cliente atendido, incidente documentado en F-01, supervisor y gerencia informados, área revisada.',
+    recommendations: 'Mantener botiquín completo, pisos secos y buena iluminación.'
+  },
+  {
+    id: 'accidente_colaborador',
+    code: 'S-05',
+    name: 'Accidente de colaborador durante turno',
+    description: 'Procedimiento para atender y documentar accidentes laborales de colaboradores.',
+    trigger: 'Colaborador sufre corte, caída, quemadura u otra lesión durante la jornada laboral.',
+    responsible: 'Encargado de turno / Supervisor',
+    areas: ['Supervisor de turno', 'Capital Humano', 'IMSS si aplica'],
+    priority: 'Alta',
+    type: 'Seguridad',
+    textSteps: [
+      'Paso 1 — Atender al colaborador de inmediato: Aplicar primeros auxilios si es leve; llamar al 911 si es grave.',
+      'Paso 2 — Notificar al supervisor de inmediato: Describir tipo de accidente y condición del colaborador.',
+      'Paso 3 — No minimizar el incidente: Reportar formalmente cualquier accidente laboral, por pequeño que parezca.',
+      'Paso 4 — Documentar el accidente: Registrar en F-01 con detalle y evidencia si procede.',
+      'Paso 5 — Seguimiento con Capital Humano e IMSS: Supervisor notifica a Capital Humano para tramitar reporte ante IMSS si aplica.'
+    ],
+    communicationRules: 'Reportar al supervisor y a Capital Humano sin excepción. No permitir retorno al trabajo sin autorización.',
+    closingCriteria: 'Colaborador atendido, incidente documentado, reporte formal enviado a Capital Humano y seguimiento IMSS iniciado si aplica.',
+    recommendations: 'Mantener botiquín completo y revisar su contenido semanalmente.'
+  }
 ];
