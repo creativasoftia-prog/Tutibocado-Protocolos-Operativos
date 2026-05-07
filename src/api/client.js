@@ -1,0 +1,39 @@
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:4100/api';
+
+const request = async (path, { method = 'GET', token, body } = {}) => {
+  const response = await fetch(`${API_BASE}${path}`, {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {})
+    },
+    body: body ? JSON.stringify(body) : undefined
+  });
+
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(data.message || 'Request failed');
+  }
+
+  return data;
+};
+
+export const api = {
+  login: (payload) => request('/auth/login', { method: 'POST', body: payload }),
+  me: (token) => request('/auth/me', { token }),
+  listUsers: (token) => request('/auth/users', { token }),
+  createUser: (token, payload) => request('/auth/users', { method: 'POST', token, body: payload }),
+  updateUser: (token, userId, payload) => request(`/auth/users/${userId}`, { method: 'PUT', token, body: payload }),
+  deleteUser: (token, userId) => request(`/auth/users/${userId}`, { method: 'DELETE', token }),
+  listRoles: (token) => request('/roles', { token }),
+  createRole: (token, payload) => request('/roles', { method: 'POST', token, body: payload }),
+  listProtocols: (token) => request('/protocols', { token }),
+  createProtocol: (token, payload) => request('/protocols', { method: 'POST', token, body: payload }),
+  updateProtocol: (token, protocolId, payload) => request(`/protocols/${protocolId}`, { method: 'PUT', token, body: payload }),
+  deleteProtocol: (token, protocolId) => request(`/protocols/${protocolId}`, { method: 'DELETE', token }),
+  listCategories: (token) => request('/protocols/categories/list', { token }),
+  createCategory: (token, payload) => request('/protocols/categories', { method: 'POST', token, body: payload }),
+  updateCategory: (token, categoryId, payload) => request(`/protocols/categories/${categoryId}`, { method: 'PUT', token, body: payload }),
+  deleteCategory: (token, categoryId) => request(`/protocols/categories/${categoryId}`, { method: 'DELETE', token })
+};

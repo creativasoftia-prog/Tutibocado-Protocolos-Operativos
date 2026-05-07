@@ -128,9 +128,9 @@ export const protocolsData = [
   {
     id: 'sistema',
     code: 'S-01',
-    name: 'Falla de sistema / App / POS',
-    description: 'Procedimiento ante la caída del sistema de punto de venta, aplicación o falla de red.',
-    trigger: 'App o POS no abre, falla, sobrecalentamiento de equipo o no permite cobrar',
+    name: 'Falla de la app o sistema de cobro',
+    description: 'Procedimiento ante la caída de la app de cobro, el sistema o falla de red.',
+    trigger: 'La app o el sistema de cobro no abre, falla, se sobrecalienta o no permite cobrar',
     responsible: 'Líder de tienda',
     areas: ['Operaciones', 'Soporte Técnico', 'Gerencia'],
     priority: 'Alta',
@@ -317,7 +317,7 @@ export const protocolsData = [
     id: 'arqueo_manual',
     code: 'F-03',
     name: 'Arqueo manual por corte',
-    description: 'Procedimiento de registro de ventas y cuadre de caja durante falta de energía eléctrica o caída del POS.',
+    description: 'Procedimiento de registro de ventas y cuadre de caja durante falta de energía eléctrica o caída del sistema de cobro.',
     trigger: 'Corte de luz prolongado o falla del sistema impidiendo cobro digital',
     responsible: 'Líder de tienda',
     areas: ['Operaciones', 'Finanzas'],
@@ -326,7 +326,7 @@ export const protocolsData = [
     textSteps: [
       'Paso 1: Iniciar registro de ventas manualmente en formato designado o libreta.',
       'Paso 2: Anotar fecha, hora, productos vendidos, total cobrado y método de pago (priorizar efectivo).',
-      'Paso 3: Al restablecerse la luz o el sistema, capturar todas las ventas manuales en el POS.',
+      'Paso 3: Al restablecerse la luz o el sistema, capturar todas las ventas manuales en el sistema de cobro.',
       'Paso 4: Realizar el arqueo sumando el efectivo físico contra el reporte de ventas manuales.',
       'Paso 5: Reportar el cierre y cualquier discrepancia al contador y supervisor.'
     ],
@@ -550,7 +550,7 @@ export const protocolsData = [
     id: 'faltante_caja_p03',
     code: 'P-03',
     name: 'Faltante de dinero en caja',
-    description: 'Protocolo ante faltante de dinero físico en caja respecto al sistema POS.',
+    description: 'Protocolo ante faltante de dinero físico en caja respecto al sistema de cobro.',
     trigger: 'Faltante detectado durante el cierre de caja o turno',
     responsible: 'Cajero/operario de tienda',
     areas: ['Administración', 'Operaciones', 'Auditoría'],
@@ -558,8 +558,8 @@ export const protocolsData = [
     type: 'Finanzas',
     textSteps: [
       'Paso 1: Operario detecta faltante y notifica INMEDIATAMENTE al supervisor.',
-      'Paso 2: Supervisor revisa sistema POS buscando transacciones rechazadas o canceladas.',
-      'Paso 3: Comparar tickets físicos con registros del POS y hacer segundo conteo.',
+      'Paso 2: Supervisor revisa el sistema de cobro buscando transacciones rechazadas o canceladas.',
+      'Paso 3: Comparar tickets físicos con los registros del sistema y hacer segundo conteo.',
       'Paso 4: Determinar causa (error de sistema, error operativo, faltante sin explicación o fraude).',
       'Paso 5: Registrar en Formato P-03-F01 (Acta de faltante de caja) con firmas.',
       'Paso 6: Notificar a administración adjuntando el acta y aplicar acción correctiva.'
@@ -808,7 +808,7 @@ export const protocolsData = [
     ],
     communicationRules: 'Comunicación rápida al supervisor para pedir número de reporte al proveedor.',
     closingCriteria: 'Servicio restaurado o contingencia activa con proveedor trabajando.',
-    recommendations: 'Considerar red de respaldo (datos móviles) para cobros en POS.'
+    recommendations: 'Considerar red de respaldo (datos móviles) para cobros en la terminal.'
   },
   {
     id: 'falla_impresora',
@@ -835,11 +835,11 @@ export const protocolsData = [
   {
     id: 'falla_pos',
     code: 'T-05',
-    name: 'Falla del sistema POS',
+    name: 'Falla del sistema de cobro',
     description: 'Acciones críticas para restablecer cobros y facturación en caja.',
-    trigger: 'POS bloqueado, no procesa pagos, lento o con errores de conexión',
+    trigger: 'El sistema de cobro está bloqueado, no procesa pagos, está lento o tiene errores de conexión',
     responsible: 'Líder de tienda',
-    areas: ['Soporte técnico POS', 'Operaciones', 'Administración'],
+    areas: ['Soporte técnico', 'Operaciones', 'Administración'],
     priority: 'Crítica',
     type: 'Tecnología/Soporte',
     textSteps: [
@@ -851,7 +851,7 @@ export const protocolsData = [
       'Paso 6: Escalar a soporte remoto. Al restaurarse, sincronizar todas las ventas manuales.'
     ],
     communicationRules: 'Aviso INMEDIATO. La inactividad de caja es la prioridad más alta.',
-    closingCriteria: 'POS operando y todas las transacciones manuales capturadas.',
+    closingCriteria: 'Sistema de cobro operando y todas las transacciones manuales capturadas.',
     recommendations: 'Uso de UPS (no-break) obligatorio y capacitación en cobros manuales.'
   }
   ,
@@ -940,25 +940,69 @@ export const protocolsData = [
     recommendations: 'Si un producto se agota con frecuencia, notificar al supervisor para revisar volumen de pedido.'
   },
   {
-    id: 'devolucion_cambio',
+    id: 'producto_echado_perder',
     code: 'C-02',
-    name: 'Devolución o cambio de producto',
-    description: 'Procedimiento para gestionar devoluciones, cambios o reembolsos solicitados por clientes.',
-    trigger: 'Cliente regresa solicitando cambio, devolución o reembolso por un producto adquirido.',
+    name: 'Producto en mal estado (echado a perder)',
+    description: 'Gestión de devoluciones y reembolsos cuando un cliente regresa un producto defectuoso, descompuesto o en mal estado.',
+    trigger: 'Cliente regresa un producto porque está en mal estado, descompuesto o tiene defecto de fábrica.',
     responsible: 'Encargado de turno',
-    areas: ['Supervisor de turno'],
+    areas: ['Operaciones', 'Supervisor de turno'],
+    priority: 'Alta',
+    type: 'Atención al Cliente',
+    textSteps: [
+      'Paso 1 — Disculpa y atención inmediata: Recibir al cliente con amabilidad, ofrecer una disculpa genuina y atenderlo de forma prioritaria.',
+      'Paso 2 — Ofrecer las dos opciones: Preguntar al cliente si prefiere un cambio por producto nuevo en buen estado o la devolución de su dinero (reembolso total).',
+      'Paso 3 — Recibir y verificar el producto: Recibir el producto, revisar visualmente el daño o deterioro y confirmar que efectivamente está en mal estado.',
+      'Paso 4 — Notificar al supervisor: Informar al supervisor sobre el caso para que autorice la acción correspondiente (cambio o reembolso).',
+      'Paso 5 — Documentar la incidencia: Registrar el caso en sistema para dar de baja el producto del inventario, justificar la salida sin cobro y permitir análisis de calidad.',
+      'Paso 6 — Ejecutar la acción: Realizar el cambio o reembolso según lo autorizado y confirmar con el cliente.'
+    ],
+    communicationRules: 'Siempre iniciar con disculpa. Ningún cambio o reembolso procede sin autorización del supervisor. Documentar cada caso para control de inventario y calidad.',
+    closingCriteria: 'Cliente atendido con cambio o reembolso ejecutado, producto dado de baja en sistema y supervisor notificado.',
+    recommendations: 'Actuar con rapidez; en productos en mal estado el proceso debe ser ágil. Si se detectan varios reclamos similares, el supervisor investiga posibles fallas de producción.'
+  },
+  {
+    id: 'no_me_gusto',
+    code: 'C-04',
+    name: 'Devolución por insatisfacción ("no me gustó")',
+    description: 'Manejo de solicitudes de cambio o reembolso cuando el cliente no quedó satisfecho con el sabor, textura o calidad del producto.',
+    trigger: 'Cliente regresa el producto porque no le gustó (sabor, textura, que estaba seco, etc.) y pide cambio o reembolso parcial.',
+    responsible: 'Encargado de turno',
+    areas: ['Operaciones', 'Supervisor de turno'],
     priority: 'Media',
     type: 'Atención al Cliente',
     textSteps: [
-      'Paso 1 — Escuchar al cliente y entender la solicitud: Recibir con amabilidad y comprender motivo y detalles de la compra.',
-      'Paso 2 — Verificar las condiciones del producto: Inspeccionar físicamente y evaluar si procede la devolución o cambio.',
-      'Paso 3 — Notificar al supervisor: Solicitar autorización antes de proceder con cualquier acción.',
-      'Paso 4 — Ejecutar la acción en sistema: Si autorizado, procesar la devolución o cambio siguiendo el flujo del POS o sistema.',
-      'Paso 5 — Confirmar con el cliente y cerrar: Informar claramente la acción realizada y canalizar a C-01 si corresponde.'
+      'Paso 1 — Recibir y escuchar al cliente: Recibirlo con amabilidad, preguntar por qué no le gustó y revisar cuánto producto trae de vuelta.',
+      'Paso 2 — Calcular cuánto trae sin consumir: Estimar el porcentaje que regresa el cliente (ej. si trae el 75% del pastel, el consumo fue del 25%).',
+      'Paso 3 — Ofrecer opciones según lo que trae: Si trae una parte considerable, puede pedir cambio por otro producto similar (mismo valor o pagando diferencia) o reembolso proporcional a lo que no consumió.',
+      'Paso 4 — Anotar el motivo: Pedir al cliente que diga brevemente por qué no le gustó (ej. "estaba seco", "sabor raro"). Esto es obligatorio si ya se han tenido tres o más quejas parecidas.',
+      'Paso 5 — Notificar al supervisor: Informar sobre el caso, sobre todo si puede indicar un problema repetido de calidad.',
+      'Paso 6 — Ejecutar el cambio o reembolso: Procesar la acción autorizada en sistema y confirmar con el cliente.'
     ],
-    communicationRules: 'Ninguna devolución o cambio procede sin autorización del supervisor. No prometer reembolsos sin verificar.',
-    closingCriteria: 'Acción ejecutada en sistema, cliente informado y satisfecho, o caso escalado formalmente.',
-    recommendations: 'Mantener trato empático para preservar la relación con el cliente.'
+    communicationRules: 'No proceder sin verificar cuánto trae el cliente de vuelta. El reembolso es siempre proporcional a lo no consumido. Si el cliente no trae nada del producto (consumo total), no procede reembolso ni cambio.',
+    closingCriteria: 'Cliente atendido con acción proporcional ejecutada, motivo registrado y supervisor notificado.',
+    recommendations: 'Mantener trato empático aunque la queja sea subjetiva. Documentar los motivos para que calidad tome acciones correctivas.'
+  },
+  {
+    id: 'cambio_tamano_tipo',
+    code: 'C-05',
+    name: 'Cambio de tamaño o tipo de producto',
+    description: 'Procedimiento cuando el cliente quiere cambiar su producto por uno de diferente tamaño o tipo, sin que esté defectuoso ni por disgusto.',
+    trigger: 'Cliente desea cambiar el producto que compró por uno de diferente tamaño o por uno completamente diferente.',
+    responsible: 'Encargado de turno',
+    areas: ['Operaciones', 'Supervisor de turno', 'Caja'],
+    priority: 'Media',
+    type: 'Atención al Cliente',
+    textSteps: [
+      'Paso 1 — Escuchar al cliente: Identificar si quiere cambiar de tamaño (ej. de 24 a 20 piezas) o de producto (ej. pastel de chocolate por uno de vainilla).',
+      'Paso 2 — Revisar el estado del producto: Confirmar que el producto esté en buen estado y no haya sido consumido más de un poco.',
+      'Paso 3 — Calcular la diferencia de precio: Si el nuevo es más caro, el cliente paga la diferencia. Si es más barato, se le devuelve la diferencia. Si son del mismo valor, no hay ajuste.',
+      'Paso 4 — Notificar al supervisor y registrar en sistema: Registrar la devolución del producto original y hacer la nueva venta con el precio correcto.',
+      'Paso 5 — Confirmar con el cliente: Explicar claramente si hay diferencia a pagar o a devolver y entregar el nuevo producto.'
+    ],
+    communicationRules: 'El cambio solo procede si el producto está en condiciones de ser revendido. Las diferencias de precio siempre se ajustan. Si el producto está muy consumido, remitir al supervisor.',
+    closingCriteria: 'Cambio procesado en sistema, diferencia económica ajustada y cliente satisfecho con el nuevo producto.',
+    recommendations: 'Es el tipo de cambio más sencillo. Priorizar la solución rápida para mantener la relación con el cliente. Registrar para control de inventario.'
   },
   {
     id: 'cliente_agresivo',
@@ -1015,7 +1059,7 @@ export const protocolsData = [
     type: 'Finanzas / Operativo',
     textSteps: [
       'Paso 1 — Atención inicial al cliente: Identificar producto, fecha, personalizaciones y datos de contacto sin comprometer disponibilidad sin verificar.',
-      'Paso 2 — Registrar el pedido en sistema: Ingresar todos los detalles siguiendo el flujo del POS.',
+      'Paso 2 — Registrar el pedido en sistema: Ingresar todos los detalles en el sistema de cobro siguiendo el flujo establecido.',
       'Paso 3 — Gestión del anticipo: Registrar pago en sistema y entregar comprobante con monto, saldo y fecha de entrega.',
       'Paso 4 — Notificar al supervisor y al contador: Informar especialmente cuando hay personalización o monto significativo.',
       'Paso 5 — Confirmar detalles con el cliente antes de su salida: Repetir producto, fecha, monto y saldo.'

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Search, SlidersHorizontal, ChevronDown } from 'lucide-react';
 import CategorySidebar from './dashboard/CategorySidebar';
 import ProtocolCardsGrid from './dashboard/ProtocolCardsGrid';
+import ProtocolAgent from './dashboard/ProtocolAgent';
 
 export default function Dashboard({ protocols, onSelect }) {
   const [searchTerm, setSearchTerm] = useState('');
@@ -72,6 +73,8 @@ export default function Dashboard({ protocols, onSelect }) {
               />
             </div>
           </div>
+
+          <ProtocolAgent protocols={protocols} onSelect={onSelect} />
 
           <div className="bg-white/60 border border-cyan-100 rounded-xl px-4 py-2.5 text-sm text-cyan-800 font-medium">
             Mostrando {filteredProtocols.length} protocolo(s)
