@@ -1,4 +1,5 @@
 import React from 'react';
+import { Search } from 'lucide-react';
 import {
   Filter,
   AlertTriangle,
@@ -45,6 +46,8 @@ export default function CategorySidebar({
   categories,
   activeFilter,
   onSelectFilter,
+  searchTerm = '',
+  onSearch = () => {},
   sticky = true,
   className = ''
 }) {
@@ -54,6 +57,20 @@ export default function CategorySidebar({
         sticky ? 'lg:sticky lg:top-24 lg:max-h-[calc(100vh-8rem)] lg:overflow-hidden' : ''
       } ${className}`}
     >
+      {/* Buscador */}
+      <div className="relative mb-4">
+        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <Search size={15} className="text-cyan-400" />
+        </div>
+        <input
+          type="text"
+          className="block w-full pl-9 pr-3 py-2 border border-cyan-200 rounded-xl bg-white placeholder-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 text-sm shadow-sm"
+          placeholder="Buscar protocolo..."
+          value={searchTerm}
+          onChange={(e) => onSearch(e.target.value)}
+        />
+      </div>
+
       <div className="flex items-center gap-2 mb-4 px-2">
         <Filter size={18} className="text-cyan-600" />
         <span className="text-sm font-semibold text-cyan-800">Categorías</span>

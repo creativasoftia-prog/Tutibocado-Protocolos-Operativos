@@ -35,5 +35,25 @@ export const api = {
   listCategories: (token) => request('/protocols/categories/list', { token }),
   createCategory: (token, payload) => request('/protocols/categories', { method: 'POST', token, body: payload }),
   updateCategory: (token, categoryId, payload) => request(`/protocols/categories/${categoryId}`, { method: 'PUT', token, body: payload }),
-  deleteCategory: (token, categoryId) => request(`/protocols/categories/${categoryId}`, { method: 'DELETE', token })
+  deleteCategory: (token, categoryId) => request(`/protocols/categories/${categoryId}`, { method: 'DELETE', token }),
+
+  // ── Empleados ──────────────────────────────────────────────────────────────
+  listEmployees: (token) => request('/employees', { token }),
+  createEmployee: (token, payload) => request('/employees', { method: 'POST', token, body: payload }),
+  updateEmployee: (token, employeeId, payload) => request(`/employees/${employeeId}`, { method: 'PUT', token, body: payload }),
+  deleteEmployee: (token, employeeId) => request(`/employees/${employeeId}`, { method: 'DELETE', token }),
+  validateEmployee: (token, code) => request(`/employees/validate/${encodeURIComponent(code)}`, { token }),
+
+  // ── Reportes RH ────────────────────────────────────────────────────────────
+  listHrReports: (token, { status, employeeId } = {}) => {
+    const params = new URLSearchParams();
+    if (status) params.set('status', status);
+    if (employeeId) params.set('employeeId', employeeId);
+    const qs = params.toString() ? `?${params.toString()}` : '';
+    return request(`/hr-reports${qs}`, { token });
+  },
+  getHrReport: (token, id) => request(`/hr-reports/${id}`, { token }),
+  createHrReport: (token, payload) => request('/hr-reports', { method: 'POST', token, body: payload }),
+  updateHrReportStatus: (token, id, payload) => request(`/hr-reports/${id}/status`, { method: 'PATCH', token, body: payload }),
+  deleteHrReport: (token, id) => request(`/hr-reports/${id}`, { method: 'DELETE', token }),
 };

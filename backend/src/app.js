@@ -5,6 +5,8 @@ import { checkDatabaseConnection } from './config/db.js';
 import { authRouter } from './modules/auth/routes.js';
 import { rolesRouter } from './modules/roles/routes.js';
 import { protocolsRouter } from './modules/protocols/routes.js';
+import { employeesRouter } from './modules/employees/routes.js';
+import { hrReportsRouter } from './modules/hr_reports/routes.js';
 
 export const app = express();
 
@@ -19,6 +21,8 @@ app.get('/api/health', async (_req, res) => {
 app.use('/api/auth', authRouter);
 app.use('/api/roles', rolesRouter);
 app.use('/api/protocols', protocolsRouter);
+app.use('/api/employees', employeesRouter);
+app.use('/api/hr-reports', hrReportsRouter);
 
 app.use((err, _req, res, _next) => {
   console.error(err);
