@@ -9,12 +9,13 @@ const normalizeSlug = (value) =>
     .replace(/-+/g, '-');
 
 export async function seed(knex) {
-  const source = await import('../../../../src/data/protocols.js');
+  const protocolsPath = process.env.PROTOCOLS_DATA_PATH || '/mnt/nvme/Tutibocado-Protocolos-Operativos/frontend/src/data/protocols.js';
+  const source = await import(protocolsPath);
   const protocolsData = source.protocolsData || [];
 
   const roles = await knex('roles').select('id', 'name');
   const visibleRoleIds = roles
-    .filter((role) => ['administrador', 'supervisor', 'logistica', 'sucursal'].includes(role.name))
+    .filter((role) => ['administrador', 'supervisor', 'gerente', 'operador'].includes(role.name))
     .map((role) => role.id);
 
   const firstAdmin = await knex('users as u')
