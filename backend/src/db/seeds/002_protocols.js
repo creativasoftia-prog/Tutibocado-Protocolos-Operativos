@@ -49,6 +49,7 @@ export async function seed(knex) {
         slug,
         code: protocol.code,
         name: protocol.name,
+        icon: protocol.icon || '',
         description: protocol.description,
         trigger: protocol.trigger,
         responsible: protocol.responsible,

@@ -7,6 +7,7 @@ import { rolesRouter } from './modules/roles/routes.js';
 import { protocolsRouter } from './modules/protocols/routes.js';
 import { employeesRouter } from './modules/employees/routes.js';
 import { hrReportsRouter } from './modules/hr_reports/routes.js';
+import { protocolIncidentsRouter } from './modules/protocol_incidents/routes.js';
 
 export const app = express();
 
@@ -23,6 +24,7 @@ app.use('/api/roles', rolesRouter);
 app.use('/api/protocols', protocolsRouter);
 app.use('/api/employees', employeesRouter);
 app.use('/api/hr-reports', hrReportsRouter);
+app.use('/api/protocol-incidents', protocolIncidentsRouter);
 
 app.use((err, _req, res, _next) => {
   console.error(err);

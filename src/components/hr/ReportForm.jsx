@@ -35,6 +35,7 @@ export default function ReportForm({ token, onSuccess, onCancel }) {
   const [errors, setErrors] = useState({});
   const [submitError, setSubmitError] = useState('');
   const [submitted, setSubmitted] = useState(null);
+  const today = new Date().toISOString().slice(0, 10);
 
   const setField = (key, value) => {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -43,16 +44,25 @@ export default function ReportForm({ token, onSuccess, onCancel }) {
 
   // ── Validar empleado por código ────────────────────────────────────────────
   const handleValidateEmployee = async () => {
-    if (!form.employeeCode.trim()) {
+    const normalizedCode = form.employeeCode.trim().toUpperCase();
+
+    if (!normalizedCode) {
       setErrors((prev) => ({ ...prev, employeeCode: 'Escribe tu número de empleado' }));
       return;
     }
+
+    if (!/^EMP-\d{3,6}$/.test(normalizedCode)) {
+      setErrors((prev) => ({ ...prev, employeeCode: 'El código debe tener formato EMP-001' }));
+      return;
+    }
+
     setValidating(true);
     setValidatedEmployee(null);
     setErrors((prev) => ({ ...prev, employeeCode: '' }));
     try {
-      const employee = await api.validateEmployee(token, form.employeeCode.trim());
+      const employee = await api.validateEmployee(token, normalizedCode);
       setValidatedEmployee(employee);
+      setForm((prev) => ({ ...prev, employeeCode: normalizedCode }));
     } catch {
       setErrors((prev) => ({
         ...prev,
@@ -79,6 +89,9 @@ export default function ReportForm({ token, onSuccess, onCancel }) {
       newErrors.description = 'Describe la situación con más detalle (mínimo 10 caracteres)';
     }
     if (!form.incidentDate) newErrors.incidentDate = 'Selecciona la fecha';
+    if (form.incidentDate && form.incidentDate > today) {
+      newErrors.incidentDate = 'La fecha del incidente no puede ser futura';
+    }
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -143,8 +156,10 @@ export default function ReportForm({ token, onSuccess, onCancel }) {
             <input
               type="text"
               value={form.employeeCode}
-              onChange={(e) => { setField('employeeCode', e.target.value); setValidatedEmployee(null); }}
+              onChange={(e) => { setField('employeeCode', e.target.value.toUpperCase()); setValidatedEmployee(null); }}
               placeholder="Ej. EMP-001"
+              pattern="EMP-[0-9]{3,6}"
+              maxLength={10}
               className="w-full px-3 py-2.5 border border-cyan-200 rounded-xl text-sm focus:ring-2 focus:ring-cyan-500 focus:outline-none"
             />
             <FieldError message={errors.employeeCode} />
@@ -207,6 +222,7 @@ export default function ReportForm({ token, onSuccess, onCancel }) {
         <label className="text-xs font-semibold uppercase tracking-wide text-cyan-800">Fecha del incidente / ausencia</label>
         <input
           type="date"
+          max={today}
           value={form.incidentDate}
           onChange={(e) => setField('incidentDate', e.target.value)}
           className="w-full px-3 py-2.5 border border-cyan-200 rounded-xl text-sm focus:ring-2 focus:ring-cyan-500 focus:outline-none"
@@ -219,6 +235,8 @@ export default function ReportForm({ token, onSuccess, onCancel }) {
         <label className="text-xs font-semibold uppercase tracking-wide text-cyan-800">Asunto</label>
         <input
           type="text"
+          minLength={5}
+          maxLength={220}
           value={form.subject}
           onChange={(e) => setField('subject', e.target.value)}
           placeholder="Ej. Falta por cita médica el 14 de mayo"
@@ -232,6 +250,8 @@ export default function ReportForm({ token, onSuccess, onCancel }) {
         <label className="text-xs font-semibold uppercase tracking-wide text-cyan-800">Descripción / detalle</label>
         <textarea
           rows={4}
+          minLength={10}
+          maxLength={2000}
           value={form.description}
           onChange={(e) => setField('description', e.target.value)}
           placeholder="Explica la situación con el mayor detalle posible..."

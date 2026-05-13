@@ -79,7 +79,7 @@ export const createUserWithRoles = async ({ fullName, email, password, roleNames
   return db.transaction(async (trx) => {
     const existing = await trx('users').where({ email: normalizedEmail }).first('id');
     if (existing) {
-      throw new Error('Email already exists');
+      throw new Error('Ya existe un usuario con ese correo');
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
@@ -96,7 +96,7 @@ export const createUserWithRoles = async ({ fullName, email, password, roleNames
     const roles = await trx('roles').whereIn('name', roleNames).select('id', 'name');
 
     if (roles.length !== roleNames.length) {
-      throw new Error('One or more roles do not exist');
+      throw new Error('Uno o más roles no existen');
     }
 
     await trx('user_roles').insert(
@@ -116,7 +116,7 @@ export const updateUserWithRoles = async ({ userId, fullName, email, password, r
   return db.transaction(async (trx) => {
     const existingUser = await trx('users').where({ id: userId }).first('id');
     if (!existingUser) {
-      throw new Error('User not found');
+      throw new Error('Usuario no encontrado');
     }
 
     const emailOwner = await trx('users')
@@ -125,7 +125,7 @@ export const updateUserWithRoles = async ({ userId, fullName, email, password, r
       .first('id');
 
     if (emailOwner) {
-      throw new Error('Email already exists');
+      throw new Error('Ya existe un usuario con ese correo');
     }
 
     const updatePayload = {
@@ -143,7 +143,7 @@ export const updateUserWithRoles = async ({ userId, fullName, email, password, r
     const roles = await trx('roles').whereIn('name', roleNames).select('id', 'name');
 
     if (roles.length !== roleNames.length) {
-      throw new Error('One or more roles do not exist');
+      throw new Error('Uno o más roles no existen');
     }
 
     await trx('user_roles').where({ user_id: userId }).del();
@@ -162,13 +162,13 @@ export const updateUserWithRoles = async ({ userId, fullName, email, password, r
 
 export const deleteUserById = async ({ userId, actorUserId }) => {
   if (Number(userId) === Number(actorUserId)) {
-    throw new Error('You cannot delete your own user');
+    throw new Error('No puedes eliminar tu propio usuario');
   }
 
   return db.transaction(async (trx) => {
     const existingUser = await trx('users').where({ id: userId }).first('id', 'email');
     if (!existingUser) {
-      throw new Error('User not found');
+      throw new Error('Usuario no encontrado');
     }
 
     await trx('users').where({ id: userId }).del();

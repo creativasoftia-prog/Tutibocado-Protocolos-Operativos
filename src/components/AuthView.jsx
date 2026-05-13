@@ -4,10 +4,25 @@ import { Shield, LogIn } from 'lucide-react';
 export default function AuthView({ onLogin, isLoading, error }) {
   const [email, setEmail] = React.useState('admin@tutibocado.local');
   const [password, setPassword] = React.useState('Admin123!');
+  const [localError, setLocalError] = React.useState('');
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    onLogin({ email, password });
+    setLocalError('');
+
+    if (!emailRegex.test(email.trim())) {
+      setLocalError('Ingresa un correo electrónico válido.');
+      return;
+    }
+
+    if (password.trim().length < 6) {
+      setLocalError('La contraseña debe tener al menos 6 caracteres.');
+      return;
+    }
+
+    onLogin({ email: email.trim(), password });
   };
 
   return (
@@ -28,6 +43,8 @@ export default function AuthView({ onLogin, isLoading, error }) {
             <label className="block text-sm font-semibold text-cyan-800 mb-1">Correo</label>
             <input
               type="email"
+              autoComplete="username"
+              maxLength={180}
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -38,6 +55,9 @@ export default function AuthView({ onLogin, isLoading, error }) {
             <label className="block text-sm font-semibold text-cyan-800 mb-1">Contrasena</label>
             <input
               type="password"
+              autoComplete="current-password"
+              minLength={6}
+              maxLength={80}
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -45,6 +65,7 @@ export default function AuthView({ onLogin, isLoading, error }) {
             />
           </div>
 
+          {localError ? <p className="text-sm text-red-600">{localError}</p> : null}
           {error ? <p className="text-sm text-red-600">{error}</p> : null}
 
           <button

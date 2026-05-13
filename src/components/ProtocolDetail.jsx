@@ -1,13 +1,46 @@
 import React, { useRef } from 'react';
-import { ArrowLeft, Download, Image as ImageIcon, CheckCircle2, AlertCircle, Info, MessagesSquare, FileText, Share2 } from 'lucide-react';
+import { ArrowLeft, Download, Image as ImageIcon, CheckCircle2, AlertCircle, Info, MessagesSquare, FileText, Share2, ClipboardCheck, Lightbulb, X } from 'lucide-react';
 import SvgDiagram from './SvgDiagram';
 import { toPng } from 'html-to-image';
 import { jsPDF } from 'jspdf';
 
-export default function ProtocolDetail({ protocol, onBack }) {
+const EMPLOYEE_CODE_REGEX = /^EMP-\d{3,6}$/i;
+
+export default function ProtocolDetail({ protocol, onBack, onCreateProtocolIncident }) {
   const [viewMode, setViewMode] = React.useState('text'); // 'text' | 'diagram'
   const printRef = useRef(null);
   const [isExporting, setIsExporting] = React.useState(false);
+  const [showIncidentModal, setShowIncidentModal] = React.useState(false);
+  const [incidentType, setIncidentType] = React.useState('ejecucion');
+  const [incidentError, setIncidentError] = React.useState('');
+  const [isSubmittingIncident, setIsSubmittingIncident] = React.useState(false);
+  const [incidentForm, setIncidentForm] = React.useState({
+    employeeCode: '',
+    followedAllSteps: '',
+    wasHelpful: '',
+    documentation: '',
+    suggestion: '',
+  });
+
+  const resetIncidentForm = () => {
+    setShowIncidentModal(false);
+    setIncidentType('ejecucion');
+    setIncidentError('');
+    setIsSubmittingIncident(false);
+    setIncidentForm({
+      employeeCode: '',
+      followedAllSteps: '',
+      wasHelpful: '',
+      documentation: '',
+      suggestion: '',
+    });
+  };
+
+  const openIncidentModal = (type) => {
+    setIncidentType(type);
+    setIncidentError('');
+    setShowIncidentModal(true);
+  };
 
   const handleExportPDF = async () => {
     if (!printRef.current) return;
@@ -55,6 +88,55 @@ export default function ProtocolDetail({ protocol, onBack }) {
     }
   };
 
+  const handleSubmitIncident = async (event) => {
+    event.preventDefault();
+    setIncidentError('');
+
+    const employeeCode = incidentForm.employeeCode.trim().toUpperCase();
+    if (!EMPLOYEE_CODE_REGEX.test(employeeCode)) {
+      setIncidentError('El código de empleado debe tener formato EMP-001.');
+      return;
+    }
+
+    if (incidentType === 'ejecucion') {
+      if (incidentForm.followedAllSteps === '') {
+        setIncidentError('Debes indicar si se siguieron todos los pasos.');
+        return;
+      }
+      if (incidentForm.wasHelpful === '') {
+        setIncidentError('Debes indicar si el protocolo fue útil.');
+        return;
+      }
+      if (incidentForm.documentation.trim().length < 10) {
+        setIncidentError('La documentación debe tener al menos 10 caracteres.');
+        return;
+      }
+    }
+
+    if (incidentType === 'sugerencia' && incidentForm.suggestion.trim().length < 10) {
+      setIncidentError('La sugerencia debe tener al menos 10 caracteres.');
+      return;
+    }
+
+    setIsSubmittingIncident(true);
+    try {
+      await onCreateProtocolIncident({
+        protocolId: protocol.id,
+        employeeCode,
+        entryType: incidentType,
+        followedAllSteps: incidentType === 'ejecucion' ? incidentForm.followedAllSteps === 'si' : undefined,
+        wasHelpful: incidentType === 'ejecucion' ? incidentForm.wasHelpful === 'si' : undefined,
+        documentation: incidentType === 'ejecucion' ? incidentForm.documentation.trim() : undefined,
+        suggestion: incidentType === 'sugerencia' ? incidentForm.suggestion.trim() : undefined,
+      });
+      resetIncidentForm();
+    } catch (error) {
+      setIncidentError(error.message || 'No se pudo enviar el registro de protocolo.');
+    } finally {
+      setIsSubmittingIncident(false);
+    }
+  };
+
   return (
     <div className="animate-in slide-in-from-right-8 duration-500 pb-20">
       {/* Top Bar Navigation */}
@@ -95,6 +177,20 @@ export default function ProtocolDetail({ protocol, onBack }) {
 
         {/* Action Buttons */}
         <div className="flex gap-2 w-full sm:w-auto">
+          <button
+            onClick={() => openIncidentModal('ejecucion')}
+            className="flex-1 sm:flex-none flex items-center justify-center px-5 py-2.5 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 font-bold transition-all shadow-md hover:shadow-lg text-sm"
+          >
+            <ClipboardCheck size={18} className="mr-2" />
+            Documentar ejecución
+          </button>
+          <button
+            onClick={() => openIncidentModal('sugerencia')}
+            className="flex-1 sm:flex-none flex items-center justify-center px-5 py-2.5 bg-amber-500 text-white rounded-xl hover:bg-amber-600 font-bold transition-all shadow-md hover:shadow-lg text-sm"
+          >
+            <Lightbulb size={18} className="mr-2" />
+            Sugerencia
+          </button>
           <button 
             onClick={handleExportImage}
             disabled={isExporting}
@@ -113,6 +209,136 @@ export default function ProtocolDetail({ protocol, onBack }) {
           </button>
         </div>
       </div>
+
+      {showIncidentModal ? (
+        <div
+          className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 backdrop-blur-sm py-6 px-3 overflow-y-auto"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) resetIncidentForm();
+          }}
+        >
+          <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-cyan-100">
+              <h2 className="font-heading font-bold text-cyan-900 text-lg flex items-center gap-2">
+                {incidentType === 'ejecucion' ? <ClipboardCheck size={18} /> : <Lightbulb size={18} />}
+                {incidentType === 'ejecucion' ? 'Documentar ejecución del protocolo' : 'Enviar sugerencia del protocolo'}
+              </h2>
+              <button type="button" onClick={resetIncidentForm} className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100">
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmitIncident} className="p-5 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <label className="space-y-1">
+                  <span className="text-xs font-semibold uppercase tracking-wide text-cyan-800">Tipo de registro</span>
+                  <select
+                    value={incidentType}
+                    onChange={(e) => setIncidentType(e.target.value)}
+                    className="w-full px-3 py-2.5 border border-cyan-200 rounded-lg text-sm"
+                  >
+                    <option value="ejecucion">Documentación de ejecución</option>
+                    <option value="sugerencia">Sugerencia</option>
+                  </select>
+                </label>
+                <label className="space-y-1">
+                  <span className="text-xs font-semibold uppercase tracking-wide text-cyan-800">Código de empleado *</span>
+                  <input
+                    required
+                    value={incidentForm.employeeCode}
+                    onChange={(e) => setIncidentForm((prev) => ({ ...prev, employeeCode: e.target.value.toUpperCase() }))}
+                    placeholder="EMP-001"
+                    className="w-full px-3 py-2.5 border border-cyan-200 rounded-lg text-sm"
+                  />
+                </label>
+              </div>
+
+              {incidentType === 'ejecucion' ? (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <label className="space-y-1">
+                      <span className="text-xs font-semibold uppercase tracking-wide text-cyan-800">¿Se siguieron todos los pasos? *</span>
+                      <select
+                        required
+                        value={incidentForm.followedAllSteps}
+                        onChange={(e) => setIncidentForm((prev) => ({ ...prev, followedAllSteps: e.target.value }))}
+                        className="w-full px-3 py-2.5 border border-cyan-200 rounded-lg text-sm"
+                      >
+                        <option value="">Selecciona una opción</option>
+                        <option value="si">Sí</option>
+                        <option value="no">No</option>
+                      </select>
+                    </label>
+
+                    <label className="space-y-1">
+                      <span className="text-xs font-semibold uppercase tracking-wide text-cyan-800">¿El protocolo fue útil? *</span>
+                      <select
+                        required
+                        value={incidentForm.wasHelpful}
+                        onChange={(e) => setIncidentForm((prev) => ({ ...prev, wasHelpful: e.target.value }))}
+                        className="w-full px-3 py-2.5 border border-cyan-200 rounded-lg text-sm"
+                      >
+                        <option value="">Selecciona una opción</option>
+                        <option value="si">Sí</option>
+                        <option value="no">No</option>
+                      </select>
+                    </label>
+                  </div>
+
+                  <label className="space-y-1 block">
+                    <span className="text-xs font-semibold uppercase tracking-wide text-cyan-800">Documentación de la ejecución *</span>
+                    <textarea
+                      required
+                      minLength={10}
+                      value={incidentForm.documentation}
+                      onChange={(e) => setIncidentForm((prev) => ({ ...prev, documentation: e.target.value }))}
+                      rows={4}
+                      placeholder="Describe qué pasó durante la aplicación del protocolo"
+                      className="w-full px-3 py-2.5 border border-cyan-200 rounded-lg text-sm"
+                    />
+                  </label>
+                </>
+              ) : (
+                <label className="space-y-1 block">
+                  <span className="text-xs font-semibold uppercase tracking-wide text-cyan-800">Sugerencia *</span>
+                  <textarea
+                    required
+                    minLength={10}
+                    value={incidentForm.suggestion}
+                    onChange={(e) => setIncidentForm((prev) => ({ ...prev, suggestion: e.target.value }))}
+                    rows={4}
+                    placeholder="¿Qué mejorarías en este protocolo?"
+                    className="w-full px-3 py-2.5 border border-cyan-200 rounded-lg text-sm"
+                  />
+                </label>
+              )}
+
+              {incidentError ? (
+                <div className="rounded-lg border border-red-200 bg-red-50 text-red-700 text-sm px-3 py-2">
+                  {incidentError}
+                </div>
+              ) : null}
+
+              <div className="flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={resetIncidentForm}
+                  className="px-4 py-2.5 rounded-lg border border-slate-200 text-slate-700 font-semibold text-sm hover:bg-slate-50"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmittingIncident}
+                  className="px-4 py-2.5 rounded-lg bg-cyan-600 hover:bg-cyan-700 text-white font-semibold text-sm disabled:opacity-50"
+                >
+                  {isSubmittingIncident ? 'Enviando...' : 'Enviar registro'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      ) : null}
 
       {/* Exportable Area */}
       <div 
@@ -253,7 +479,7 @@ export default function ProtocolDetail({ protocol, onBack }) {
           ) : (
             <div className="min-h-[600px] flex items-center justify-center bg-white rounded-xl border-2 border-dashed border-slate-200 p-8">
               <div className="w-full h-full max-w-4xl mx-auto">
-                <SvgDiagram protocolId={protocol.id} protocolName={protocol.name} />
+                <SvgDiagram protocol={protocol} />
               </div>
             </div>
           )}

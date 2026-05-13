@@ -7,6 +7,7 @@ import AdminPanel from './components/AdminPanel';
 import HRDashboard from './components/hr/HRDashboard';
 import ReportForm from './components/hr/ReportForm';
 import { api } from './api/client';
+import { useToast } from './context/ToastContext';
 
 function App() {
   const [selectedProtocol, setSelectedProtocol] = useState(null);
@@ -22,6 +23,7 @@ function App() {
   const [actionError, setActionError] = useState('');
   const [employees, setEmployees] = useState([]);
   const [showReportModal, setShowReportModal] = useState(false);
+  const toast = useToast();
 
   const isAdmin = useMemo(() => user?.roles?.includes('administrador'), [user]);
   const isCapitalHumano = useMemo(() => user?.roles?.includes('capital_humano'), [user]);
@@ -82,8 +84,10 @@ function App() {
       localStorage.setItem('tb_token', result.token);
       setToken(result.token);
       setView('dashboard');
+      toast.success('Sesión iniciada correctamente.');
     } catch (error) {
       setAuthError(error.message || 'No se pudo iniciar sesion');
+      toast.error(error.message || 'No se pudo iniciar sesion');
     } finally {
       setIsLoading(false);
     }
@@ -110,6 +114,7 @@ function App() {
       await loadSessionData(token);
     } catch (error) {
       setActionError(error.message || 'No fue posible refrescar datos');
+      toast.error(error.message || 'No fue posible refrescar datos');
     }
   };
 
@@ -117,8 +122,34 @@ function App() {
     try {
       await api.createRole(token, payload);
       await refreshAdminData();
+      toast.success('Rol creado correctamente.');
     } catch (error) {
       setActionError(error.message || 'No se pudo crear el rol');
+      toast.error(error.message || 'No se pudo crear el rol');
+      throw error;
+    }
+  };
+
+  const handleUpdateRole = async (roleName, payload) => {
+    try {
+      await api.updateRole(token, roleName, payload);
+      await refreshAdminData();
+      toast.success('Rol actualizado correctamente.');
+    } catch (error) {
+      setActionError(error.message || 'No se pudo actualizar el rol');
+      toast.error(error.message || 'No se pudo actualizar el rol');
+      throw error;
+    }
+  };
+
+  const handleDeleteRole = async (roleName) => {
+    try {
+      await api.deleteRole(token, roleName);
+      await refreshAdminData();
+      toast.success('Rol eliminado correctamente.');
+    } catch (error) {
+      setActionError(error.message || 'No se pudo eliminar el rol');
+      toast.error(error.message || 'No se pudo eliminar el rol');
       throw error;
     }
   };
@@ -127,8 +158,10 @@ function App() {
     try {
       await api.createUser(token, payload);
       await refreshAdminData();
+      toast.success('Perfil creado correctamente.');
     } catch (error) {
       setActionError(error.message || 'No se pudo crear el perfil');
+      toast.error(error.message || 'No se pudo crear el perfil');
       throw error;
     }
   };
@@ -137,8 +170,10 @@ function App() {
     try {
       await api.createProtocol(token, payload);
       await refreshAdminData();
+      toast.success('Protocolo creado correctamente.');
     } catch (error) {
       setActionError(error.message || 'No se pudo crear el protocolo');
+      toast.error(error.message || 'No se pudo crear el protocolo');
       throw error;
     }
   };
@@ -147,8 +182,10 @@ function App() {
     try {
       await api.updateProtocol(token, protocolId, payload);
       await refreshAdminData();
+      toast.success('Protocolo actualizado correctamente.');
     } catch (error) {
       setActionError(error.message || 'No se pudo actualizar el protocolo');
+      toast.error(error.message || 'No se pudo actualizar el protocolo');
       throw error;
     }
   };
@@ -157,8 +194,21 @@ function App() {
     try {
       await api.deleteProtocol(token, protocolId);
       await refreshAdminData();
+      toast.success('Protocolo eliminado correctamente.');
     } catch (error) {
       setActionError(error.message || 'No se pudo eliminar el protocolo');
+      toast.error(error.message || 'No se pudo eliminar el protocolo');
+      throw error;
+    }
+  };
+
+  const handleCreateProtocolIncident = async (payload) => {
+    try {
+      await api.createProtocolIncident(token, payload);
+      toast.success('Registro de protocolo enviado correctamente.');
+    } catch (error) {
+      setActionError(error.message || 'No se pudo registrar la incidencia del protocolo');
+      toast.error(error.message || 'No se pudo registrar la incidencia del protocolo');
       throw error;
     }
   };
@@ -167,8 +217,10 @@ function App() {
     try {
       await api.updateUser(token, userId, payload);
       await refreshAdminData();
+      toast.success('Perfil actualizado correctamente.');
     } catch (error) {
       setActionError(error.message || 'No se pudo actualizar el perfil');
+      toast.error(error.message || 'No se pudo actualizar el perfil');
       throw error;
     }
   };
@@ -177,8 +229,10 @@ function App() {
     try {
       await api.deleteUser(token, userId);
       await refreshAdminData();
+      toast.success('Perfil eliminado correctamente.');
     } catch (error) {
       setActionError(error.message || 'No se pudo eliminar el perfil');
+      toast.error(error.message || 'No se pudo eliminar el perfil');
       throw error;
     }
   };
@@ -187,8 +241,10 @@ function App() {
     try {
       await api.createCategory(token, payload);
       await refreshAdminData();
+      toast.success('Categoría creada correctamente.');
     } catch (error) {
       setActionError(error.message || 'No se pudo crear la categoria');
+      toast.error(error.message || 'No se pudo crear la categoria');
       throw error;
     }
   };
@@ -197,8 +253,10 @@ function App() {
     try {
       await api.updateCategory(token, categoryId, payload);
       await refreshAdminData();
+      toast.success('Categoría actualizada correctamente.');
     } catch (error) {
       setActionError(error.message || 'No se pudo actualizar la categoria');
+      toast.error(error.message || 'No se pudo actualizar la categoria');
       throw error;
     }
   };
@@ -207,8 +265,10 @@ function App() {
     try {
       await api.deleteCategory(token, categoryId);
       await refreshAdminData();
+      toast.success('Categoría eliminada correctamente.');
     } catch (error) {
       setActionError(error.message || 'No se pudo eliminar la categoria');
+      toast.error(error.message || 'No se pudo eliminar la categoria');
       throw error;
     }
   };
@@ -218,8 +278,10 @@ function App() {
     try {
       await api.createEmployee(token, payload);
       await refreshAdminData();
+      toast.success('Empleado registrado correctamente.');
     } catch (error) {
       setActionError(error.message || 'No se pudo registrar el empleado');
+      toast.error(error.message || 'No se pudo registrar el empleado');
       throw error;
     }
   };
@@ -228,8 +290,10 @@ function App() {
     try {
       await api.updateEmployee(token, employeeId, payload);
       await refreshAdminData();
+      toast.success('Empleado actualizado correctamente.');
     } catch (error) {
       setActionError(error.message || 'No se pudo actualizar el empleado');
+      toast.error(error.message || 'No se pudo actualizar el empleado');
       throw error;
     }
   };
@@ -238,8 +302,10 @@ function App() {
     try {
       await api.deleteEmployee(token, employeeId);
       await refreshAdminData();
+      toast.success('Empleado eliminado correctamente.');
     } catch (error) {
       setActionError(error.message || 'No se pudo eliminar el empleado');
+      toast.error(error.message || 'No se pudo eliminar el empleado');
       throw error;
     }
   };
@@ -380,6 +446,7 @@ function App() {
         {view === 'admin' && isAdmin ? (
           <div className="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8">
             <AdminPanel
+              token={token}
               roles={roles}
               users={users}
               protocols={protocols}
@@ -387,6 +454,8 @@ function App() {
               employees={employees}
               onRefresh={refreshAdminData}
               onCreateRole={handleCreateRole}
+              onUpdateRole={handleUpdateRole}
+              onDeleteRole={handleDeleteRole}
               onCreateUser={handleCreateUser}
               onCreateProtocol={handleCreateProtocol}
               onUpdateProtocol={handleUpdateProtocol}
@@ -411,7 +480,11 @@ function App() {
 
         {view !== 'admin' && view !== 'hr' && selectedProtocol ? (
           <div className="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8">
-            <ProtocolDetail protocol={selectedProtocol} onBack={() => setSelectedProtocol(null)} />
+            <ProtocolDetail
+              protocol={selectedProtocol}
+              onBack={() => setSelectedProtocol(null)}
+              onCreateProtocolIncident={handleCreateProtocolIncident}
+            />
           </div>
         ) : null}
 
@@ -438,7 +511,10 @@ function App() {
             <div className="p-5">
               <ReportForm
                 token={token}
-                onSuccess={() => setShowReportModal(false)}
+                onSuccess={() => {
+                  setShowReportModal(false);
+                  toast.success('Reporte enviado correctamente.');
+                }}
                 onCancel={() => setShowReportModal(false)}
               />
             </div>

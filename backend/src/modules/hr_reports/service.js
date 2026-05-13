@@ -1,4 +1,4 @@
-import { db } from '../../config/db.js';
+import { db, isPostgresClient } from '../../config/db.js';
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -34,8 +34,12 @@ const extractInsertedId = (insertResult) => {
 const generateReportNumber = async () => {
   const today = new Date();
   const dateStr = today.toISOString().slice(0, 10).replace(/-/g, '');
+  const currentDateExpression = isPostgresClient()
+    ? `CURRENT_DATE`
+    : `CAST(GETDATE() AS DATE)`;
+
   const count = await db('hr_reports')
-    .whereRaw(`CAST(created_at AS DATE) = CAST(GETDATE() AS DATE)`)
+    .whereRaw(`CAST(created_at AS DATE) = ${currentDateExpression}`)
     .count('id as cnt')
     .first();
   const seq = ((count?.cnt || 0) + 1);

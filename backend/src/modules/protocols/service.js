@@ -14,6 +14,7 @@ const mapProtocolRowToPublic = (row, steps, visibilityRoleNames) => ({
   id: row.slug,
   code: row.code,
   name: row.name,
+  icon: row.icon || '',
   description: row.description,
   trigger: row.trigger,
   responsible: row.responsible,
@@ -65,6 +66,7 @@ export const listVisibleProtocols = async (userRoles) => {
       'p.slug',
       'p.code',
       'p.name',
+      'p.icon',
       'p.description',
       'p.trigger',
       'p.responsible',
@@ -87,6 +89,7 @@ export const listVisibleProtocols = async (userRoles) => {
         'p.slug',
         'p.code',
         'p.name',
+        'p.icon',
         'p.description',
         'p.trigger',
         'p.responsible',
@@ -112,9 +115,21 @@ const getOrCreateTypeId = async (trx, typeName) => {
   return created.id;
 };
 
+const generateProtocolCode = async (trx) => {
+  const row = await trx('protocols').max('id as maxId').first();
+  const next = Number(row?.maxId || 0) + 1;
+  return `PR-${String(next).padStart(3, '0')}`;
+};
+
 export const createProtocol = async ({ payload, actorUserId }) => {
   return db.transaction(async (trx) => {
     const typeId = await getOrCreateTypeId(trx, payload.type);
+    const code = payload.code?.trim() || (await generateProtocolCode(trx));
+
+    const existingCode = await trx('protocols').where({ code }).first('id');
+    if (existingCode) {
+      throw new Error(`Ya existe un protocolo con el código ${code}`);
+    }
 
     const baseSlug = normalizeSlug(payload.name);
     let slug = baseSlug;
@@ -132,8 +147,9 @@ export const createProtocol = async ({ payload, actorUserId }) => {
     const [createdProtocol] = await trx('protocols')
       .insert({
         slug,
-        code: payload.code,
+        code,
         name: payload.name,
+        icon: payload.icon || '',
         description: payload.description,
         trigger: payload.trigger,
         responsible: payload.responsible,
@@ -145,7 +161,7 @@ export const createProtocol = async ({ payload, actorUserId }) => {
         recommendations: payload.recommendations,
         created_by_user_id: actorUserId
       })
-      .returning(['id', 'slug', 'code', 'name', 'description', 'trigger', 'responsible', 'areas_json', 'priority', 'communication_rules', 'closing_criteria', 'recommendations']);
+      .returning(['id', 'slug', 'code', 'name', 'icon', 'description', 'trigger', 'responsible', 'areas_json', 'priority', 'communication_rules', 'closing_criteria', 'recommendations']);
 
     await trx('protocol_steps').insert(
       payload.textSteps.map((content, index) => ({
@@ -170,7 +186,7 @@ export const createProtocol = async ({ payload, actorUserId }) => {
       action: 'protocol.create',
       entity_type: 'protocol',
       entity_id: `${createdProtocol.id}`,
-      details: JSON.stringify({ code: payload.code, name: payload.name })
+      details: JSON.stringify({ code, name: payload.name })
     });
 
     const [typeRow] = await trx('protocol_types').where({ id: typeId }).select('name');
@@ -191,15 +207,22 @@ const getTypeBySlug = async (trx, typeSlug) => {
 const ensureVisibilityRoles = async (trx, roleNames) => {
   const roles = await trx('roles').whereIn('name', roleNames).select('id', 'name');
   if (roles.length !== roleNames.length) {
-    throw new Error('One or more visibility roles do not exist');
+    throw new Error('Uno o más roles de visibilidad no existen');
   }
   return roles;
 };
 
 const updateProtocolCore = async ({ trx, protocolId, payload }) => {
-  const protocol = await trx('protocols').where({ id: protocolId }).first('id');
+  const protocol = await trx('protocols').where({ id: protocolId }).first('id', 'code');
   if (!protocol) {
-    throw new Error('Protocol not found');
+    throw new Error('Protocolo no encontrado');
+  }
+
+  const code = payload.code?.trim() || protocol.code;
+
+  const duplicated = await trx('protocols').where({ code }).whereNot({ id: protocolId }).first('id');
+  if (duplicated) {
+    throw new Error(`Ya existe otro protocolo con el código ${code}`);
   }
 
   const typeId = await getOrCreateTypeId(trx, payload.type);
@@ -207,8 +230,9 @@ const updateProtocolCore = async ({ trx, protocolId, payload }) => {
   await trx('protocols')
     .where({ id: protocolId })
     .update({
-      code: payload.code,
+      code,
       name: payload.name,
+      icon: payload.icon || '',
       description: payload.description,
       trigger: payload.trigger,
       responsible: payload.responsible,
@@ -241,7 +265,7 @@ export const updateProtocolBySlug = async ({ slug, payload, actorUserId }) => {
   return db.transaction(async (trx) => {
     const protocol = await trx('protocols').where({ slug }).first('id');
     if (!protocol) {
-      throw new Error('Protocol not found');
+      throw new Error('Protocolo no encontrado');
     }
 
     await updateProtocolCore({ trx, protocolId: protocol.id, payload });
@@ -262,6 +286,7 @@ export const updateProtocolBySlug = async ({ slug, payload, actorUserId }) => {
         'p.slug',
         'p.code',
         'p.name',
+        'p.icon',
         'p.description',
         'p.trigger',
         'p.responsible',
@@ -282,7 +307,7 @@ export const deleteProtocolBySlug = async ({ slug, actorUserId }) => {
   return db.transaction(async (trx) => {
     const protocol = await trx('protocols').where({ slug }).first('id', 'name');
     if (!protocol) {
-      throw new Error('Protocol not found');
+      throw new Error('Protocolo no encontrado');
     }
 
     await trx('protocols').where({ id: protocol.id }).del();
@@ -319,7 +344,7 @@ export const createCategory = async ({ name, actorUserId }) => {
     const normalized = name.trim();
     const existing = await trx('protocol_types').where({ name: normalized }).first('id');
     if (existing) {
-      throw new Error('Category already exists');
+      throw new Error('La categoría ya existe');
     }
 
     const [created] = await trx('protocol_types').insert({ name: normalized }).returning(['id', 'name']);
@@ -340,7 +365,7 @@ export const updateCategoryBySlug = async ({ categoryId, name, actorUserId }) =>
   return db.transaction(async (trx) => {
     const category = await getTypeBySlug(trx, categoryId);
     if (!category) {
-      throw new Error('Category not found');
+      throw new Error('Categoría no encontrada');
     }
 
     const normalized = name.trim();
@@ -350,7 +375,7 @@ export const updateCategoryBySlug = async ({ categoryId, name, actorUserId }) =>
       .first('id');
 
     if (duplicate) {
-      throw new Error('Category already exists');
+      throw new Error('La categoría ya existe');
     }
 
     await trx('protocol_types').where({ id: category.id }).update({ name: normalized });
@@ -377,14 +402,14 @@ export const deleteCategoryBySlug = async ({ categoryId, actorUserId }) => {
   return db.transaction(async (trx) => {
     const category = await getTypeBySlug(trx, categoryId);
     if (!category) {
-      throw new Error('Category not found');
+      throw new Error('Categoría no encontrada');
     }
 
     const [usage] = await trx('protocols').where({ protocol_type_id: category.id }).count('id as count');
     const count = Number(usage?.count || 0);
 
     if (count > 0) {
-      throw new Error('Cannot delete category with related protocols');
+      throw new Error('No se puede eliminar una categoría con protocolos relacionados');
     }
 
     await trx('protocol_types').where({ id: category.id }).del();

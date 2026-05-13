@@ -15,10 +15,83 @@ import {
   MessageSquare,
   ShoppingBag,
   Megaphone,
-  Wrench
+  Wrench,
+  Thermometer,
+  Flame,
+  Droplets,
+  Building2,
+  ClipboardList,
+  CreditCard,
+  Clock,
+  Star,
+  Bug,
+  ChefHat,
+  BarChart2,
+  DollarSign,
+  Phone,
+  MapPin,
+  Lock,
+  AlertOctagon,
+  Coffee,
+  HeartHandshake,
+  Stethoscope,
+  Wifi,
+  Clipboard,
+  Recycle,
+  UserCheck,
+  Briefcase,
+  Battery
 } from 'lucide-react';
 
-const getIcon = (type) => {
+const ICON_BY_KEY = {
+  Package,
+  ClipboardList,
+  Clipboard,
+  Briefcase,
+  Clock,
+  Star,
+  Zap,
+  Battery,
+  Wifi,
+  Building2,
+  Droplets,
+  Thermometer,
+  Flame,
+  ShoppingBag,
+  Truck,
+  Recycle,
+  MonitorX,
+  CreditCard,
+  Users,
+  UserCheck,
+  Phone,
+  MessageSquare,
+  Coffee,
+  HeartHandshake,
+  ChefHat,
+  Bug,
+  ShieldCheck,
+  ShieldAlert,
+  Lock,
+  Stethoscope,
+  AlertOctagon,
+  DollarSign,
+  BarChart2,
+  Scale,
+  FileText,
+  Megaphone,
+  MapPin,
+  Wrench,
+  AlertTriangle
+};
+
+const getIcon = (protocol) => {
+  if (protocol.icon && ICON_BY_KEY[protocol.icon]) {
+    const Icon = ICON_BY_KEY[protocol.icon];
+    return <Icon className="text-cyan-600" size={24} />;
+  }
+
+  const type = protocol.type;
   switch (type) {
     case 'Infraestructura': return <Zap className="text-amber-500" size={24} />;
     case 'Operativo': return <Package className="text-blue-500" size={24} />;
@@ -59,7 +132,7 @@ export default function ProtocolCardsGrid({ protocols, onSelect }) {
         >
           <div className="flex justify-between items-start mb-4">
             <div className="p-3 bg-cyan-50 rounded-xl group-hover:bg-cyan-100 transition-colors">
-              {getIcon(protocol.type)}
+              {getIcon(protocol)}
             </div>
             <span className={`text-xs font-bold px-2.5 py-1 rounded-full border ${getPriorityColor(protocol.priority)}`}>
               {protocol.priority}

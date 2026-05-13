@@ -1,14 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 
-// Common animation variants
 const nodeVariant = {
-  hidden: { opacity: 0, y: 20, scale: 0.95 },
+  hidden: { opacity: 0, y: 12, scale: 0.98 },
   visible: (custom) => ({
-    opacity: 1, 
-    y: 0, 
+    opacity: 1,
+    y: 0,
     scale: 1,
-    transition: { delay: custom * 0.2, duration: 0.5, type: 'spring', stiffness: 100 }
+    transition: { delay: custom * 0.09, duration: 0.35 }
   })
 };
 
@@ -17,204 +16,132 @@ const lineVariant = {
   visible: (custom) => ({
     pathLength: 1,
     opacity: 1,
-    transition: { delay: custom * 0.2 + 0.3, duration: 0.6, ease: 'easeInOut' }
+    transition: { delay: custom * 0.09 + 0.1, duration: 0.3 }
   })
 };
 
-const SvgDiagram = ({ protocolId, protocolName }) => {
-  const [key, setKey] = useState(0);
-
-  // Remount component to trigger animations when tab changes
-  useEffect(() => {
-    setKey(prev => prev + 1);
-  }, [protocolId]);
-
-  // Generate generic flow based on ID if we don't have a specific SVG for it
-  // Since we have data for specific flows, we'll map them:
-  
-  const renderLuzFlow = () => (
-    <svg width="100%" viewBox="0 0 680 560" className="max-w-3xl mx-auto drop-shadow-sm font-body">
-      <defs>
-        <marker id="arr-luz" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-          <path d="M2 1L8 5L2 9" fill="none" stroke="#94A3B8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-        </marker>
-        <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-          <feDropShadow dx="0" dy="2" stdDeviation="3" floodOpacity="0.05"/>
-        </filter>
-      </defs>
-      
-      {/* Title */}
-      <motion.text x="340" y="22" textAnchor="middle" fontSize="16" fontWeight="600" fill="#164E63"
-        initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-        {protocolName}
-      </motion.text>
-
-      {/* Start Node */}
-      <motion.g custom={0} variants={nodeVariant} initial="hidden" animate="visible">
-        <rect x="240" y="36" width="200" height="34" rx="17" fill="#F1F5F9" stroke="#CBD5E1" strokeWidth="1" filter="url(#shadow)"/>
-        <text x="340" y="53" textAnchor="middle" dominantBaseline="central" fontSize="13" fontWeight="600" fill="#475569">Tienda sin luz</text>
-      </motion.g>
-      
-      <motion.line x1="340" y1="70" x2="340" y2="90" stroke="#94A3B8" strokeWidth="1.5" markerEnd="url(#arr-luz)" custom={0} variants={lineVariant} initial="hidden" animate="visible"/>
-
-      {/* Step 1 */}
-      <motion.g custom={1} variants={nodeVariant} initial="hidden" animate="visible">
-        <rect x="180" y="90" width="320" height="48" rx="8" fill="#EFF6FF" stroke="#93C5FD" strokeWidth="1.5" filter="url(#shadow)"/>
-        <text x="340" y="106" textAnchor="middle" dominantBaseline="central" fontSize="13" fontWeight="600" fill="#1E40AF">Paso 1: Verificar equipo vs local</text>
-        <text x="340" y="124" textAnchor="middle" dominantBaseline="central" fontSize="11" fill="#3B82F6">Desconectar equipos · Revisar breakers</text>
-      </motion.g>
-
-      <motion.line x1="340" y1="138" x2="340" y2="158" stroke="#94A3B8" strokeWidth="1.5" markerEnd="url(#arr-luz)" custom={1} variants={lineVariant} initial="hidden" animate="visible"/>
-
-      {/* Decision 1 */}
-      <motion.g custom={2} variants={nodeVariant} initial="hidden" animate="visible">
-        <rect x="200" y="158" width="280" height="42" rx="8" fill="#FAF5FF" stroke="#D8B4FE" strokeWidth="1.5" filter="url(#shadow)"/>
-        <text x="340" y="172" textAnchor="middle" dominantBaseline="central" fontSize="13" fontWeight="600" fill="#6B21A8">¿Se restableció la luz?</text>
-        <text x="340" y="188" textAnchor="middle" dominantBaseline="central" fontSize="11" fill="#9333EA">Revisando breakers</text>
-      </motion.g>
-
-      <motion.line x1="480" y1="179" x2="550" y2="179" stroke="#22C55E" strokeWidth="1.5" markerEnd="url(#arr-luz)" custom={2} variants={lineVariant} initial="hidden" animate="visible"/>
-      <motion.text x="510" y="173" fontSize="11" fontWeight="bold" fill="#16A34A" custom={2} variants={nodeVariant} initial="hidden" animate="visible">SÍ</motion.text>
-      
-      {/* End 1 */}
-      <motion.g custom={3} variants={nodeVariant} initial="hidden" animate="visible">
-        <rect x="550" y="159" width="100" height="40" rx="8" fill="#F0FDF4" stroke="#86EFAC" strokeWidth="1.5" filter="url(#shadow)"/>
-        <text x="600" y="179" textAnchor="middle" dominantBaseline="central" fontSize="12" fontWeight="600" fill="#166534">Fin del protocolo</text>
-      </motion.g>
-
-      <motion.line x1="340" y1="200" x2="340" y2="220" stroke="#EF4444" strokeWidth="1.5" markerEnd="url(#arr-luz)" custom={2} variants={lineVariant} initial="hidden" animate="visible"/>
-      <motion.text x="350" y="213" fontSize="11" fontWeight="bold" fill="#DC2626" custom={2} variants={nodeVariant} initial="hidden" animate="visible">NO</motion.text>
-
-      {/* Step 2 */}
-      <motion.g custom={3} variants={nodeVariant} initial="hidden" animate="visible">
-        <rect x="180" y="220" width="320" height="48" rx="8" fill="#EFF6FF" stroke="#93C5FD" strokeWidth="1.5" filter="url(#shadow)"/>
-        <text x="340" y="238" textAnchor="middle" dominantBaseline="central" fontSize="13" fontWeight="600" fill="#1E40AF">Paso 2: Verificar problema en la zona</text>
-        <text x="340" y="256" textAnchor="middle" dominantBaseline="central" fontSize="11" fill="#3B82F6">Consultar con vecinos o exterior</text>
-      </motion.g>
-
-      <motion.line x1="340" y1="268" x2="340" y2="288" stroke="#94A3B8" strokeWidth="1.5" markerEnd="url(#arr-luz)" custom={3} variants={lineVariant} initial="hidden" animate="visible"/>
-
-      {/* Step 3 */}
-      <motion.g custom={4} variants={nodeVariant} initial="hidden" animate="visible">
-        <rect x="180" y="288" width="320" height="48" rx="8" fill="#EFF6FF" stroke="#93C5FD" strokeWidth="1.5" filter="url(#shadow)"/>
-        <text x="340" y="306" textAnchor="middle" dominantBaseline="central" fontSize="13" fontWeight="600" fill="#1E40AF">Paso 3: Reportar al 071 (CFE)</text>
-        <text x="340" y="324" textAnchor="middle" dominantBaseline="central" fontSize="11" fill="#3B82F6">Notificar anomalía + avisar supervisor</text>
-      </motion.g>
-
-      <motion.line x1="340" y1="336" x2="340" y2="356" stroke="#94A3B8" strokeWidth="1.5" markerEnd="url(#arr-luz)" custom={4} variants={lineVariant} initial="hidden" animate="visible"/>
-
-      {/* Step 4 */}
-      <motion.g custom={5} variants={nodeVariant} initial="hidden" animate="visible">
-        <rect x="180" y="356" width="320" height="48" rx="8" fill="#EFF6FF" stroke="#93C5FD" strokeWidth="1.5" filter="url(#shadow)"/>
-        <text x="340" y="374" textAnchor="middle" dominantBaseline="central" fontSize="13" fontWeight="600" fill="#1E40AF">Paso 4: Esperar tiempo de CFE</text>
-        <text x="340" y="392" textAnchor="middle" dominantBaseline="central" fontSize="11" fill="#3B82F6">Mant: 1–2h · Avería: hasta 6–8h</text>
-      </motion.g>
-
-      <motion.line x1="340" y1="404" x2="340" y2="424" stroke="#94A3B8" strokeWidth="1.5" markerEnd="url(#arr-luz)" custom={5} variants={lineVariant} initial="hidden" animate="visible"/>
-
-      {/* Decision 2 */}
-      <motion.g custom={6} variants={nodeVariant} initial="hidden" animate="visible">
-        <rect x="180" y="424" width="320" height="42" rx="8" fill="#FAF5FF" stroke="#D8B4FE" strokeWidth="1.5" filter="url(#shadow)"/>
-        <text x="340" y="438" textAnchor="middle" dominantBaseline="central" fontSize="13" fontWeight="600" fill="#6B21A8">¿Se restableció o hay riesgo para producto?</text>
-      </motion.g>
-
-      <motion.line x1="500" y1="445" x2="554" y2="445" stroke="#22C55E" strokeWidth="1.5" markerEnd="url(#arr-luz)" custom={6} variants={lineVariant} initial="hidden" animate="visible"/>
-      <motion.text x="518" y="438" fontSize="11" fontWeight="bold" fill="#16A34A" custom={6} variants={nodeVariant} initial="hidden" animate="visible">SÍ</motion.text>
-
-      {/* End 2 */}
-      <motion.g custom={7} variants={nodeVariant} initial="hidden" animate="visible">
-        <rect x="554" y="425" width="100" height="40" rx="8" fill="#F0FDF4" stroke="#86EFAC" strokeWidth="1.5" filter="url(#shadow)"/>
-        <text x="604" y="445" textAnchor="middle" dominantBaseline="central" fontSize="12" fontWeight="600" fill="#166534">Documentar</text>
-      </motion.g>
-
-      <motion.line x1="340" y1="466" x2="340" y2="488" stroke="#EF4444" strokeWidth="1.5" markerEnd="url(#arr-luz)" custom={6} variants={lineVariant} initial="hidden" animate="visible"/>
-      <motion.text x="350" y="480" fontSize="11" fontWeight="bold" fill="#DC2626" custom={6} variants={nodeVariant} initial="hidden" animate="visible">NO</motion.text>
-
-      {/* Step 5 */}
-      <motion.g custom={8} variants={nodeVariant} initial="hidden" animate="visible">
-        <rect x="140" y="488" width="400" height="48" rx="8" fill="#FFF1F2" stroke="#FDA4AF" strokeWidth="1.5" filter="url(#shadow)"/>
-        <text x="340" y="506" textAnchor="middle" dominantBaseline="central" fontSize="13" fontWeight="600" fill="#BE123C">Paso 5: Retorno al CEDIS o traslado</text>
-        <text x="340" y="524" textAnchor="middle" dominantBaseline="central" fontSize="11" fill="#E11D48">Inventario manual · Retorno documentado · Cierre</text>
-      </motion.g>
-    </svg>
-  );
-
-  // Fallback generic flow for any other protocol
-  const renderGenericFlow = () => (
-    <svg width="100%" viewBox="0 0 680 400" className="max-w-2xl mx-auto drop-shadow-sm font-body">
-      <defs>
-        <marker id="arr-gen" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-          <path d="M2 1L8 5L2 9" fill="none" stroke="#94A3B8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-        </marker>
-        <filter id="shadow2" x="-20%" y="-20%" width="140%" height="140%">
-          <feDropShadow dx="0" dy="2" stdDeviation="3" floodOpacity="0.05"/>
-        </filter>
-      </defs>
-      
-      <motion.text x="340" y="22" textAnchor="middle" fontSize="16" fontWeight="600" fill="#164E63"
-        initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-        {protocolName}
-      </motion.text>
-
-      <motion.g custom={0} variants={nodeVariant} initial="hidden" animate="visible">
-        <rect x="220" y="36" width="240" height="34" rx="17" fill="#F8FAFC" stroke="#CBD5E1" strokeWidth="1.5" filter="url(#shadow2)"/>
-        <text x="340" y="53" textAnchor="middle" dominantBaseline="central" fontSize="13" fontWeight="600" fill="#475569">Inicio del Protocolo</text>
-      </motion.g>
-      
-      <motion.line x1="340" y1="70" x2="340" y2="90" stroke="#94A3B8" strokeWidth="1.5" markerEnd="url(#arr-gen)" custom={0} variants={lineVariant} initial="hidden" animate="visible"/>
-
-      <motion.g custom={1} variants={nodeVariant} initial="hidden" animate="visible">
-        <rect x="180" y="90" width="320" height="48" rx="8" fill="#F0F9FF" stroke="#7DD3FC" strokeWidth="1.5" filter="url(#shadow2)"/>
-        <text x="340" y="106" textAnchor="middle" dominantBaseline="central" fontSize="13" fontWeight="600" fill="#0369A1">Notificación y Evaluación Inicial</text>
-        <text x="340" y="124" textAnchor="middle" dominantBaseline="central" fontSize="11" fill="#0284C7">Líder notifica al supervisor · Se reúne evidencia</text>
-      </motion.g>
-
-      <motion.line x1="340" y1="138" x2="340" y2="158" stroke="#94A3B8" strokeWidth="1.5" markerEnd="url(#arr-gen)" custom={1} variants={lineVariant} initial="hidden" animate="visible"/>
-
-      <motion.g custom={2} variants={nodeVariant} initial="hidden" animate="visible">
-        <rect x="180" y="158" width="320" height="48" rx="8" fill="#ECFEFF" stroke="#67E8F9" strokeWidth="1.5" filter="url(#shadow2)"/>
-        <text x="340" y="176" textAnchor="middle" dominantBaseline="central" fontSize="13" fontWeight="600" fill="#0E7490">Acción y Comunicación</text>
-        <text x="340" y="194" textAnchor="middle" dominantBaseline="central" fontSize="11" fill="#0891B2">Supervisor escala o atiende directamente</text>
-      </motion.g>
-
-      <motion.line x1="340" y1="206" x2="340" y2="226" stroke="#94A3B8" strokeWidth="1.5" markerEnd="url(#arr-gen)" custom={2} variants={lineVariant} initial="hidden" animate="visible"/>
-
-      <motion.g custom={3} variants={nodeVariant} initial="hidden" animate="visible">
-        <rect x="180" y="226" width="320" height="42" rx="8" fill="#FAF5FF" stroke="#D8B4FE" strokeWidth="1.5" filter="url(#shadow2)"/>
-        <text x="340" y="244" textAnchor="middle" dominantBaseline="central" fontSize="13" fontWeight="600" fill="#6B21A8">¿Problema resuelto localmente?</text>
-      </motion.g>
-
-      <motion.line x1="500" y1="247" x2="554" y2="247" stroke="#22C55E" strokeWidth="1.5" markerEnd="url(#arr-gen)" custom={3} variants={lineVariant} initial="hidden" animate="visible"/>
-      <motion.text x="518" y="241" fontSize="11" fontWeight="bold" fill="#16A34A" custom={3} variants={nodeVariant} initial="hidden" animate="visible">SÍ</motion.text>
-
-      <motion.g custom={4} variants={nodeVariant} initial="hidden" animate="visible">
-        <rect x="554" y="227" width="100" height="40" rx="8" fill="#F0FDF4" stroke="#86EFAC" strokeWidth="1.5" filter="url(#shadow2)"/>
-        <text x="604" y="247" textAnchor="middle" dominantBaseline="central" fontSize="12" fontWeight="600" fill="#166534">Documentar</text>
-      </motion.g>
-
-      <motion.line x1="340" y1="268" x2="340" y2="288" stroke="#EF4444" strokeWidth="1.5" markerEnd="url(#arr-gen)" custom={3} variants={lineVariant} initial="hidden" animate="visible"/>
-      <motion.text x="350" y="281" fontSize="11" fontWeight="bold" fill="#DC2626" custom={3} variants={nodeVariant} initial="hidden" animate="visible">NO</motion.text>
-
-      <motion.g custom={4} variants={nodeVariant} initial="hidden" animate="visible">
-        <rect x="180" y="288" width="320" height="48" rx="8" fill="#FFF1F2" stroke="#FDA4AF" strokeWidth="1.5" filter="url(#shadow2)"/>
-        <text x="340" y="306" textAnchor="middle" dominantBaseline="central" fontSize="13" fontWeight="600" fill="#BE123C">Escalamiento a Gerencia</text>
-        <text x="340" y="324" textAnchor="middle" dominantBaseline="central" fontSize="11" fill="#E11D48">Gerencia toma decisión final o acción mayor</text>
-      </motion.g>
-
-      <motion.line x1="340" y1="336" x2="340" y2="356" stroke="#94A3B8" strokeWidth="1.5" markerEnd="url(#arr-gen)" custom={4} variants={lineVariant} initial="hidden" animate="visible"/>
-
-      <motion.g custom={5} variants={nodeVariant} initial="hidden" animate="visible">
-        <rect x="220" y="356" width="240" height="34" rx="17" fill="#F8FAFC" stroke="#CBD5E1" strokeWidth="1.5" filter="url(#shadow2)"/>
-        <text x="340" y="373" textAnchor="middle" dominantBaseline="central" fontSize="13" fontWeight="600" fill="#475569">Caso documentado y cerrado</text>
-      </motion.g>
-    </svg>
-  );
-
-  return (
-    <div key={key} className="w-full h-full flex justify-center py-4 bg-white rounded-xl">
-      {protocolId === 'luz' ? renderLuzFlow() : renderGenericFlow()}
-    </div>
-  );
+const sanitizeStep = (value) => {
+  if (!value) return 'Paso sin descripción';
+  return String(value).trim().replace(/^Paso\s*\d+\s*[:\-]\s*/i, '');
 };
 
-export default SvgDiagram;
+export default function SvgDiagram({ protocol }) {
+  const title = protocol?.name || 'Protocolo';
+  const trigger = protocol?.trigger || 'Sin detonante definido';
+  const rawSteps = Array.isArray(protocol?.textSteps) ? protocol.textSteps : [];
+
+  const steps = useMemo(() => {
+    const parsed = rawSteps.map(sanitizeStep).filter(Boolean);
+    return parsed.length ? parsed : ['Registrar incidencia', 'Notificar al responsable', 'Documentar y cerrar'];
+  }, [rawSteps]);
+
+  const layout = useMemo(() => {
+    const maxSteps = 10;
+    const visibleSteps = steps.slice(0, maxSteps);
+    const baseY = 120;
+    const stepGap = 82;
+    const finalY = baseY + visibleSteps.length * stepGap;
+    const height = Math.max(420, finalY + 120);
+
+    return { visibleSteps, baseY, stepGap, finalY, height };
+  }, [steps]);
+
+  return (
+    <div className="w-full h-full flex justify-center py-4 bg-white rounded-xl">
+      <svg width="100%" viewBox={`0 0 900 ${layout.height}`} className="max-w-4xl mx-auto drop-shadow-sm font-body">
+        <defs>
+          <marker id="arr-dyn" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M2 1L8 5L2 9" fill="none" stroke="#94A3B8" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+          </marker>
+        </defs>
+
+        <motion.text x="450" y="30" textAnchor="middle" fontSize="19" fontWeight="700" fill="#164E63" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+          {title}
+        </motion.text>
+
+        <motion.g custom={0} variants={nodeVariant} initial="hidden" animate="visible">
+          <rect x="120" y="48" width="660" height="48" rx="14" fill="#FFF7ED" stroke="#FDBA74" strokeWidth="1.6" />
+          <text x="450" y="68" textAnchor="middle" dominantBaseline="central" fontSize="13" fontWeight="700" fill="#9A3412">
+            Situación detonante
+          </text>
+          <text x="450" y="84" textAnchor="middle" dominantBaseline="central" fontSize="12" fill="#C2410C">
+            {trigger.length > 88 ? `${trigger.slice(0, 88)}...` : trigger}
+          </text>
+        </motion.g>
+
+        <motion.line
+          x1="450"
+          y1="96"
+          x2="450"
+          y2={layout.baseY - 16}
+          stroke="#94A3B8"
+          strokeWidth="1.8"
+          markerEnd="url(#arr-dyn)"
+          custom={0}
+          variants={lineVariant}
+          initial="hidden"
+          animate="visible"
+        />
+
+        {layout.visibleSteps.map((step, idx) => {
+          const y = layout.baseY + idx * layout.stepGap;
+          const nodeColor = idx % 2 === 0
+            ? { fill: '#ECFEFF', stroke: '#67E8F9', title: '#155E75', body: '#0E7490' }
+            : { fill: '#F0F9FF', stroke: '#93C5FD', title: '#1E3A8A', body: '#1D4ED8' };
+
+          return (
+            <g key={`flow-step-${idx}`}>
+              <motion.g custom={idx + 1} variants={nodeVariant} initial="hidden" animate="visible">
+                <rect x="140" y={y} width="620" height="54" rx="10" fill={nodeColor.fill} stroke={nodeColor.stroke} strokeWidth="1.5" />
+                <circle cx="172" cy={y + 27} r="16" fill="#ffffff" stroke={nodeColor.stroke} strokeWidth="1.4" />
+                <text x="172" y={y + 27} textAnchor="middle" dominantBaseline="central" fontSize="12" fontWeight="700" fill={nodeColor.title}>
+                  {idx + 1}
+                </text>
+                <text x="205" y={y + 27} dominantBaseline="central" fontSize="12" fill={nodeColor.body}>
+                  {step.length > 84 ? `${step.slice(0, 84)}...` : step}
+                </text>
+              </motion.g>
+
+              {idx < layout.visibleSteps.length - 1 ? (
+                <motion.line
+                  x1="450"
+                  y1={y + 54}
+                  x2="450"
+                  y2={y + layout.stepGap - 14}
+                  stroke="#94A3B8"
+                  strokeWidth="1.6"
+                  markerEnd="url(#arr-dyn)"
+                  custom={idx + 1}
+                  variants={lineVariant}
+                  initial="hidden"
+                  animate="visible"
+                />
+              ) : null}
+            </g>
+          );
+        })}
+
+        <motion.line
+          x1="450"
+          y1={layout.finalY + 54}
+          x2="450"
+          y2={layout.finalY + 76}
+          stroke="#94A3B8"
+          strokeWidth="1.6"
+          markerEnd="url(#arr-dyn)"
+          custom={layout.visibleSteps.length + 2}
+          variants={lineVariant}
+          initial="hidden"
+          animate="visible"
+        />
+
+        <motion.g custom={layout.visibleSteps.length + 3} variants={nodeVariant} initial="hidden" animate="visible">
+          <rect x="280" y={layout.finalY + 76} width="340" height="44" rx="22" fill="#F0FDF4" stroke="#86EFAC" strokeWidth="1.6" />
+          <text x="450" y={layout.finalY + 98} textAnchor="middle" dominantBaseline="central" fontSize="13" fontWeight="700" fill="#166534">
+            Cierre y documentación
+          </text>
+        </motion.g>
+      </svg>
+    </div>
+  );
+}

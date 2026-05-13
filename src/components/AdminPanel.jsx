@@ -58,6 +58,7 @@ import {
   Briefcase,
   Battery,
 } from 'lucide-react';
+import ProtocolIncidentsPanel from './protocols/ProtocolIncidentsPanel';
 
 // ── Iconos disponibles para elegir ────────────────────────────────────────────
 const ICON_OPTIONS = [
@@ -230,6 +231,9 @@ function ProtocolPreview({ form }) {
 
 
 const PROTOCOL_PAGE_SIZE = 10;
+const ROLE_PAGE_SIZE = 8;
+const USER_PAGE_SIZE = 8;
+const CATEGORY_PAGE_SIZE = 8;
 
 const emptyProtocol = {
   code: '',
@@ -275,7 +279,10 @@ const emptyEmployee = {
 
 const EMPLOYEE_PAGE_SIZE = 10;
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export default function AdminPanel({
+  token,
   roles,
   users,
   protocols,
@@ -295,34 +302,87 @@ export default function AdminPanel({
   onCreateEmployee,
   onUpdateEmployee,
   onDeleteEmployee,
+  onUpdateRole,
+  onDeleteRole,
 }) {
   const [activeSection, setActiveSection] = React.useState('protocols');
 
   const [protocolForm, setProtocolForm] = React.useState(emptyProtocol);
+  const [protocolFormError, setProtocolFormError] = React.useState('');
   const [editingProtocolId, setEditingProtocolId] = React.useState('');
   const [showProtocolModal, setShowProtocolModal] = React.useState(false);
   const [protocolPreviewTab, setProtocolPreviewTab] = React.useState(false);
   const [protocolPage, setProtocolPage] = React.useState(0);
 
   const [roleForm, setRoleForm] = React.useState(emptyRole);
+  const [roleFormError, setRoleFormError] = React.useState('');
+  const [editingRoleName, setEditingRoleName] = React.useState('');
+  const [rolePage, setRolePage] = React.useState(0);
+  const [roleSearch, setRoleSearch] = React.useState('');
 
   const [userForm, setUserForm] = React.useState(emptyUser);
+  const [userFormError, setUserFormError] = React.useState('');
   const [editingUserId, setEditingUserId] = React.useState(null);
+  const [userPage, setUserPage] = React.useState(0);
+  const [userSearch, setUserSearch] = React.useState('');
 
   const [categoryForm, setCategoryForm] = React.useState(emptyCategory);
+  const [categoryFormError, setCategoryFormError] = React.useState('');
   const [editingCategoryId, setEditingCategoryId] = React.useState('');
+  const [categoryPage, setCategoryPage] = React.useState(0);
+  const [categorySearch, setCategorySearch] = React.useState('');
 
   const [employeeForm, setEmployeeForm] = React.useState(emptyEmployee);
+  const [employeeFormError, setEmployeeFormError] = React.useState('');
   const [editingEmployeeId, setEditingEmployeeId] = React.useState(null);
   const [showEmployeeModal, setShowEmployeeModal] = React.useState(false);
   const [employeePage, setEmployeePage] = React.useState(0);
   const [employeeSearch, setEmployeeSearch] = React.useState('');
 
-  const [feedback, setFeedback] = React.useState('');
 
   const setProtocolField = (field, value) => {
     setProtocolForm((prev) => ({ ...prev, [field]: value }));
   };
+
+  const normalizeCategory = (value) =>
+    String(value || '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim();
+
+  const getCategoryPrefix = (categoryName) => {
+    const category = normalizeCategory(categoryName);
+
+    if (category.includes('infraestructura')) return 'E';
+    if (category.includes('insumos')) return 'I';
+    if (category.includes('logistica')) return 'L';
+    if (category.includes('tecnologia') || category.includes('soporte')) return 'S';
+    if (category.includes('capital humano') || category.includes('recursos humanos')) return 'H';
+    if (category.includes('sanidad')) return 'M';
+    if (category.includes('gubernamentales') || category.includes('autoridad')) return 'A';
+    if (category.includes('finanzas')) return 'F';
+    if (category.includes('cliente')) return 'C';
+    return 'PR';
+  };
+
+  const getSuggestedProtocolCode = (categoryName) => {
+    const prefix = getCategoryPrefix(categoryName);
+    const pattern = new RegExp(`^${prefix}-(\\d{2,4})$`, 'i');
+
+    const maxCurrent = protocols
+      .map((item) => String(item.code || '').trim().match(pattern))
+      .filter(Boolean)
+      .map((match) => Number(match[1] || 0))
+      .reduce((max, value) => Math.max(max, value), 0);
+
+    return `${prefix}-${String(maxCurrent + 1).padStart(2, '0')}`;
+  };
+
+  const suggestedProtocolCode = React.useMemo(
+    () => getSuggestedProtocolCode(protocolForm.type),
+    [protocolForm.type, protocols]
+  );
 
   const setProtocolAreaAt = (index, value) => {
     const next = [...protocolForm.areas];
@@ -359,6 +419,7 @@ export default function AdminPanel({
 
   const resetProtocolForm = () => {
     setProtocolForm(emptyProtocol);
+    setProtocolFormError('');
     setEditingProtocolId('');
     setShowProtocolModal(false);
     setProtocolPreviewTab(false);
@@ -366,16 +427,19 @@ export default function AdminPanel({
 
   const resetUserForm = () => {
     setUserForm(emptyUser);
+    setUserFormError('');
     setEditingUserId(null);
   };
 
   const resetCategoryForm = () => {
     setCategoryForm(emptyCategory);
+    setCategoryFormError('');
     setEditingCategoryId('');
   };
 
   const resetEmployeeForm = () => {
     setEmployeeForm(emptyEmployee);
+    setEmployeeFormError('');
     setEditingEmployeeId(null);
     setShowEmployeeModal(false);
   };
@@ -399,10 +463,32 @@ export default function AdminPanel({
 
   const submitEmployee = async (e) => {
     e.preventDefault();
+    setEmployeeFormError('');
+
+    const normalizedEmail = employeeForm.email.trim();
+    const normalizedPhone = employeeForm.phone.replace(/\D/g, '');
+
+    if (employeeForm.fullName.trim().length < 3) {
+      setEmployeeFormError('El nombre completo debe tener al menos 3 caracteres.');
+      return;
+    }
+
+    if (normalizedEmail && !EMAIL_REGEX.test(normalizedEmail)) {
+      setEmployeeFormError('Ingresa un correo electrónico válido.');
+      return;
+    }
+
+    if (normalizedPhone && normalizedPhone.length !== 10) {
+      setEmployeeFormError('El teléfono debe contener exactamente 10 dígitos.');
+      return;
+    }
+
     const payload = {
       ...employeeForm,
-      email: employeeForm.email || null,
-      phone: employeeForm.phone || null,
+      employeeCode: editingEmployeeId ? employeeForm.employeeCode : '',
+      fullName: employeeForm.fullName.trim(),
+      email: normalizedEmail || null,
+      phone: normalizedPhone || null,
       department: employeeForm.department || null,
       branch: employeeForm.branch || null,
       position: employeeForm.position || null,
@@ -411,10 +497,8 @@ export default function AdminPanel({
     };
     if (editingEmployeeId) {
       await onUpdateEmployee(editingEmployeeId, payload);
-      setFeedback('Empleado actualizado correctamente.');
     } else {
       await onCreateEmployee(payload);
-      setFeedback('Empleado registrado correctamente.');
     }
     resetEmployeeForm();
   };
@@ -422,25 +506,72 @@ export default function AdminPanel({
   const removeEmployee = async (emp) => {
     if (!window.confirm(`¿Eliminar a ${emp.fullName}? Esta acción no se puede deshacer.`)) return;
     await onDeleteEmployee(emp.id);
-    setFeedback('Empleado eliminado.');
   };
 
   const submitRole = async (event) => {
     event.preventDefault();
-    await onCreateRole(roleForm);
+    setRoleFormError('');
+
+    if (roleForm.name.trim().length < 3) {
+      setRoleFormError('El nombre del rol debe tener al menos 3 caracteres.');
+      return;
+    }
+
+    if (roleForm.description.trim().length < 3) {
+      setRoleFormError('La descripción del rol debe tener al menos 3 caracteres.');
+      return;
+    }
+
+    const payload = { name: roleForm.name.trim(), description: roleForm.description.trim() };
+    if (editingRoleName) {
+      await onUpdateRole(editingRoleName, payload);
+    } else {
+      await onCreateRole(payload);
+    }
+
     setRoleForm(emptyRole);
-    setFeedback('Rol creado correctamente.');
+    setEditingRoleName('');
+  };
+
+  const startEditRole = (role) => {
+    setEditingRoleName(role.name);
+    setRoleForm({
+      name: role.name,
+      description: role.description || ''
+    });
+    setRoleFormError('');
+  };
+
+  const cancelEditRole = () => {
+    setEditingRoleName('');
+    setRoleForm(emptyRole);
+    setRoleFormError('');
+  };
+
+  const removeRole = async (role) => {
+    const approved = window.confirm(`¿Eliminar rol ${role.name}?`);
+    if (!approved) return;
+    await onDeleteRole(role.name);
+    if (editingRoleName === role.name) {
+      cancelEditRole();
+    }
   };
 
   const submitCategory = async (event) => {
     event.preventDefault();
+    setCategoryFormError('');
+
+    if (categoryForm.name.trim().length < 3) {
+      setCategoryFormError('La categoría debe tener al menos 3 caracteres.');
+      return;
+    }
+
+    const payload = { name: categoryForm.name.trim() };
 
     if (editingCategoryId) {
-      await onUpdateCategory(editingCategoryId, categoryForm);
-      setFeedback('Categoria actualizada correctamente.');
+      await onUpdateCategory(editingCategoryId, payload);
     } else {
-      await onCreateCategory(categoryForm);
-      setFeedback('Categoria creada correctamente.');
+      await onCreateCategory(payload);
     }
 
     resetCategoryForm();
@@ -448,13 +579,45 @@ export default function AdminPanel({
 
   const submitUser = async (event) => {
     event.preventDefault();
+    setUserFormError('');
+
+    if (userForm.fullName.trim().length < 3) {
+      setUserFormError('El nombre completo debe tener al menos 3 caracteres.');
+      return;
+    }
+
+    if (!EMAIL_REGEX.test(userForm.email.trim())) {
+      setUserFormError('Ingresa un correo electrónico válido.');
+      return;
+    }
+
+    if (!editingUserId && userForm.password.trim().length < 6) {
+      setUserFormError('La contraseña debe tener al menos 6 caracteres.');
+      return;
+    }
+
+    if (editingUserId && userForm.password && userForm.password.trim().length > 0 && userForm.password.trim().length < 6) {
+      setUserFormError('La nueva contraseña debe tener al menos 6 caracteres.');
+      return;
+    }
+
+    if (!userForm.roleNames.length) {
+      setUserFormError('Debes seleccionar al menos un rol para el usuario.');
+      return;
+    }
+
+    const payload = {
+      ...userForm,
+      fullName: userForm.fullName.trim(),
+      email: userForm.email.trim(),
+      password: userForm.password || '',
+      roleNames: userForm.roleNames
+    };
 
     if (editingUserId) {
-      await onUpdateUser(editingUserId, userForm);
-      setFeedback('Perfil actualizado correctamente.');
+      await onUpdateUser(editingUserId, payload);
     } else {
-      await onCreateUser(userForm);
-      setFeedback('Perfil de usuario creado correctamente.');
+      await onCreateUser(payload);
     }
 
     resetUserForm();
@@ -462,19 +625,49 @@ export default function AdminPanel({
 
   const submitProtocol = async (event) => {
     event.preventDefault();
+    setProtocolFormError('');
+
+    const availableRoleNames = roles.map((role) => role.name);
+    const sanitizedVisibleRoles = protocolForm.visibleForRoles
+      .map((item) => item.trim())
+      .filter((item) => item && availableRoleNames.includes(item));
 
     const payload = {
       ...protocolForm,
+      code: protocolForm.code.trim(),
+      name: protocolForm.name.trim(),
+      description: protocolForm.description.trim(),
+      trigger: protocolForm.trigger.trim(),
+      responsible: protocolForm.responsible.trim(),
+      priority: protocolForm.priority.trim(),
+      type: protocolForm.type.trim(),
+      communicationRules: protocolForm.communicationRules.trim(),
+      closingCriteria: protocolForm.closingCriteria.trim(),
+      recommendations: protocolForm.recommendations.trim(),
       areas: protocolForm.areas.map((item) => item.trim()).filter(Boolean),
-      textSteps: protocolForm.textSteps.map((step) => step.trim()).filter(Boolean)
+      textSteps: protocolForm.textSteps.map((step) => step.trim()).filter(Boolean),
+      visibleForRoles: sanitizedVisibleRoles.length ? sanitizedVisibleRoles : availableRoleNames.slice(0, 1)
     };
+
+    if (payload.description.length < 8) {
+      setProtocolFormError('La descripción debe tener al menos 8 caracteres.');
+      return;
+    }
+
+    if (payload.trigger.length < 5) {
+      setProtocolFormError('La situación detonante debe tener al menos 5 caracteres.');
+      return;
+    }
+
+    if (payload.textSteps.some((item) => item.length < 5)) {
+      setProtocolFormError('Cada paso operativo debe tener al menos 5 caracteres.');
+      return;
+    }
 
     if (editingProtocolId) {
       await onUpdateProtocol(editingProtocolId, payload);
-      setFeedback('Protocolo actualizado correctamente.');
     } else {
       await onCreateProtocol(payload);
-      setFeedback('Protocolo creado y visible segun roles seleccionados.');
     }
 
     resetProtocolForm(); // closes modal too
@@ -525,7 +718,6 @@ export default function AdminPanel({
     const approved = window.confirm(`Eliminar protocolo ${protocol.code} - ${protocol.name}?`);
     if (!approved) return;
     await onDeleteProtocol(protocol.id);
-    setFeedback('Protocolo eliminado correctamente.');
     if (editingProtocolId === protocol.id) resetProtocolForm();
   };
 
@@ -533,7 +725,6 @@ export default function AdminPanel({
     const approved = window.confirm(`Eliminar perfil de ${user.fullName}?`);
     if (!approved) return;
     await onDeleteUser(user.id);
-    setFeedback('Perfil eliminado correctamente.');
     if (editingUserId === user.id) resetUserForm();
   };
 
@@ -541,12 +732,12 @@ export default function AdminPanel({
     const approved = window.confirm(`Eliminar categoria ${category.name}?`);
     if (!approved) return;
     await onDeleteCategory(category.id);
-    setFeedback('Categoria eliminada correctamente.');
     if (editingCategoryId === category.id) resetCategoryForm();
   };
 
   const NAV_ITEMS = [
     { key: 'protocols',  label: 'Protocolos', Icon: FolderKanban, count: protocols.length },
+    { key: 'protocolIncidents', label: 'Incidencias', Icon: ClipboardList, count: null },
     { key: 'users',      label: 'Perfiles',   Icon: Users,        count: users.length },
     { key: 'employees',  label: 'Empleados',  Icon: UserCheck,    count: employees?.length || 0 },
     { key: 'categories', label: 'Categorías', Icon: Tags,         count: categories.length },
@@ -591,10 +782,6 @@ export default function AdminPanel({
           </div>
         </div>
       </div>
-
-      {feedback ? (
-        <p className="text-sm text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-lg px-3 py-2">{feedback}</p>
-      ) : null}
 
       {/* ── Sidebar + contenido ──────────────────────────────────────── */}
       <div className="grid grid-cols-1 md:grid-cols-[220px_minmax(0,1fr)] lg:grid-cols-[240px_minmax(0,1fr)] gap-5 items-start">
@@ -663,22 +850,93 @@ export default function AdminPanel({
       {activeSection === 'roles' ? (
         <section className="bg-white rounded-2xl border border-cyan-100 shadow-sm p-5">
           <h3 className="font-heading font-semibold text-cyan-900 text-xl mb-4 flex items-center gap-2">
-            <ShieldPlus size={20} /> Crear rol
+            <ShieldPlus size={20} /> {editingRoleName ? 'Editar rol' : 'Crear rol'}
           </h3>
           <form onSubmit={submitRole} className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <input required value={roleForm.name} onChange={(e) => setRoleForm((prev) => ({ ...prev, name: e.target.value }))} placeholder="Nombre del rol" className="px-3 py-2.5 border border-cyan-200 rounded-lg" />
-            <input required value={roleForm.description} onChange={(e) => setRoleForm((prev) => ({ ...prev, description: e.target.value }))} placeholder="Descripcion" className="px-3 py-2.5 border border-cyan-200 rounded-lg" />
-            <button className="bg-cyan-600 text-white rounded-lg font-semibold px-4 py-2.5">Guardar rol</button>
+            <input required minLength={3} maxLength={80} value={roleForm.name} onChange={(e) => setRoleForm((prev) => ({ ...prev, name: e.target.value }))} placeholder="Nombre del rol" className="px-3 py-2.5 border border-cyan-200 rounded-lg" />
+            <input required minLength={3} maxLength={300} value={roleForm.description} onChange={(e) => setRoleForm((prev) => ({ ...prev, description: e.target.value }))} placeholder="Descripcion" className="px-3 py-2.5 border border-cyan-200 rounded-lg" />
+            <div className="flex items-center gap-2">
+              <button className="bg-cyan-600 text-white rounded-lg font-semibold px-4 py-2.5 flex-1">
+                {editingRoleName ? 'Guardar cambios' : 'Guardar rol'}
+              </button>
+              {editingRoleName ? (
+                <button type="button" onClick={cancelEditRole} className="bg-white border border-slate-200 text-slate-700 rounded-lg font-semibold px-4 py-2.5">
+                  Cancelar
+                </button>
+              ) : null}
+            </div>
           </form>
+          {roleFormError ? <p className="mt-2 text-sm text-rose-700">{roleFormError}</p> : null}
           <div className="mt-5 border-t border-cyan-100 pt-4">
             <p className="text-sm font-semibold text-cyan-800 mb-2">Roles actuales</p>
-            <div className="flex flex-wrap gap-2">
-              {roles.map((role) => (
-                <span key={`role-chip-${role.name}`} className="inline-flex items-center px-3 py-1.5 rounded-lg border border-cyan-200 bg-cyan-50 text-cyan-800 text-sm">
-                  {role.name}
-                </span>
-              ))}
+            <div className="relative mb-3">
+              <input
+                type="text"
+                value={roleSearch}
+                onChange={(e) => { setRoleSearch(e.target.value); setRolePage(0); }}
+                placeholder="Buscar rol por nombre o descripción..."
+                className="w-full pl-9 pr-3 py-2.5 border border-cyan-200 rounded-xl text-sm focus:ring-2 focus:ring-cyan-500 focus:outline-none"
+              />
+              <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
             </div>
+            {(() => {
+              const q = roleSearch.toLowerCase().trim();
+              const filteredRoles = roles.filter((role) =>
+                !q ||
+                role.name?.toLowerCase().includes(q) ||
+                role.description?.toLowerCase().includes(q)
+              );
+              const paginatedRoles = filteredRoles.slice(rolePage * ROLE_PAGE_SIZE, (rolePage + 1) * ROLE_PAGE_SIZE);
+
+              if (filteredRoles.length === 0) {
+                return <p className="text-sm text-slate-400 text-center py-6">Sin roles para mostrar.</p>;
+              }
+
+              return (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    {paginatedRoles.map((role) => (
+                      <div key={`role-chip-${role.name}`} className="inline-flex items-center justify-between gap-3 px-3 py-2 rounded-lg border border-cyan-200 bg-cyan-50 text-cyan-800 text-sm">
+                        <div>
+                          <p className="font-semibold">{role.name}</p>
+                          <p className="text-xs text-cyan-700">{role.description || 'Sin descripción'}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button type="button" onClick={() => startEditRole(role)} className="inline-flex items-center gap-1 text-xs font-semibold text-cyan-700 hover:text-cyan-900">
+                            <Pencil size={13} /> Editar
+                          </button>
+                          <button type="button" onClick={() => removeRole(role)} className="inline-flex items-center gap-1 text-xs font-semibold text-rose-700 hover:text-rose-900">
+                            <Trash2 size={13} /> Eliminar
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {filteredRoles.length > ROLE_PAGE_SIZE ? (
+                    <div className="flex items-center justify-between mt-4 pt-3 border-t border-cyan-100">
+                      <button
+                        type="button"
+                        disabled={rolePage === 0}
+                        onClick={() => setRolePage((p) => p - 1)}
+                        className="inline-flex items-center gap-1 px-3 py-2 rounded-lg border border-cyan-200 text-sm font-semibold text-cyan-700 disabled:opacity-40 hover:bg-cyan-50"
+                      >
+                        <ChevronLeft size={15} /> Anterior
+                      </button>
+                      <span className="text-xs text-slate-500">Página {rolePage + 1} de {Math.ceil(filteredRoles.length / ROLE_PAGE_SIZE)} · {filteredRoles.length} roles</span>
+                      <button
+                        type="button"
+                        disabled={(rolePage + 1) * ROLE_PAGE_SIZE >= filteredRoles.length}
+                        onClick={() => setRolePage((p) => p + 1)}
+                        className="inline-flex items-center gap-1 px-3 py-2 rounded-lg border border-cyan-200 text-sm font-semibold text-cyan-700 disabled:opacity-40 hover:bg-cyan-50"
+                      >
+                        Siguiente <ChevronRight size={15} />
+                      </button>
+                    </div>
+                  ) : null}
+                </>
+              );
+            })()}
           </div>
         </section>
       ) : null}
@@ -689,7 +947,7 @@ export default function AdminPanel({
             <Tags size={20} /> Gestion de categorias
           </h3>
           <form onSubmit={submitCategory} className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <input required value={categoryForm.name} onChange={(e) => setCategoryForm({ name: e.target.value })} placeholder="Nombre de categoria" className="px-3 py-2.5 border border-cyan-200 rounded-lg" />
+            <input required minLength={3} maxLength={120} value={categoryForm.name} onChange={(e) => setCategoryForm({ name: e.target.value })} placeholder="Nombre de categoria" className="px-3 py-2.5 border border-cyan-200 rounded-lg" />
             <div className="md:col-span-2 flex flex-wrap gap-2">
               <button className="bg-cyan-600 text-white rounded-lg font-semibold px-4 py-2.5">
                 {editingCategoryId ? 'Guardar cambios' : 'Crear categoria'}
@@ -701,24 +959,77 @@ export default function AdminPanel({
               ) : null}
             </div>
           </form>
+          {categoryFormError ? <p className="mt-2 text-sm text-rose-700">{categoryFormError}</p> : null}
 
-          <div className="mt-5 border-t border-cyan-100 pt-4 grid grid-cols-1 md:grid-cols-2 gap-2">
-            {categories.map((category) => (
-              <div key={category.id} className="rounded-lg border border-slate-200 px-3 py-2 bg-slate-50 flex items-center justify-between gap-3">
-                <div>
-                  <p className="font-semibold text-slate-800">{category.name}</p>
-                  <p className="text-xs text-slate-500">Protocolos relacionados: {category.protocolsCount}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button type="button" onClick={() => startEditCategory(category)} className="inline-flex items-center gap-1 text-xs font-semibold text-cyan-700 hover:text-cyan-900">
-                    <Pencil size={14} /> Editar
-                  </button>
-                  <button type="button" onClick={() => removeCategory(category)} className="inline-flex items-center gap-1 text-xs font-semibold text-rose-700 hover:text-rose-900">
-                    <Trash2 size={14} /> Eliminar
-                  </button>
-                </div>
-              </div>
-            ))}
+          <div className="mt-5 border-t border-cyan-100 pt-4">
+            <div className="relative mb-3">
+              <input
+                type="text"
+                value={categorySearch}
+                onChange={(e) => { setCategorySearch(e.target.value); setCategoryPage(0); }}
+                placeholder="Buscar categoría..."
+                className="w-full pl-9 pr-3 py-2.5 border border-cyan-200 rounded-xl text-sm focus:ring-2 focus:ring-cyan-500 focus:outline-none"
+              />
+              <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            </div>
+
+            {(() => {
+              const q = categorySearch.toLowerCase().trim();
+              const filteredCategories = categories.filter((category) =>
+                !q ||
+                category.name?.toLowerCase().includes(q)
+              );
+              const paginatedCategories = filteredCategories.slice(categoryPage * CATEGORY_PAGE_SIZE, (categoryPage + 1) * CATEGORY_PAGE_SIZE);
+
+              if (filteredCategories.length === 0) {
+                return <p className="text-sm text-slate-400 text-center py-6">Sin categorías para mostrar.</p>;
+              }
+
+              return (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    {paginatedCategories.map((category) => (
+                      <div key={category.id} className="rounded-lg border border-slate-200 px-3 py-2 bg-slate-50 flex items-center justify-between gap-3">
+                        <div>
+                          <p className="font-semibold text-slate-800">{category.name}</p>
+                          <p className="text-xs text-slate-500">Protocolos relacionados: {category.protocolsCount}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button type="button" onClick={() => startEditCategory(category)} className="inline-flex items-center gap-1 text-xs font-semibold text-cyan-700 hover:text-cyan-900">
+                            <Pencil size={14} /> Editar
+                          </button>
+                          <button type="button" onClick={() => removeCategory(category)} className="inline-flex items-center gap-1 text-xs font-semibold text-rose-700 hover:text-rose-900">
+                            <Trash2 size={14} /> Eliminar
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {filteredCategories.length > CATEGORY_PAGE_SIZE ? (
+                    <div className="flex items-center justify-between mt-4 pt-3 border-t border-cyan-100">
+                      <button
+                        type="button"
+                        disabled={categoryPage === 0}
+                        onClick={() => setCategoryPage((p) => p - 1)}
+                        className="inline-flex items-center gap-1 px-3 py-2 rounded-lg border border-cyan-200 text-sm font-semibold text-cyan-700 disabled:opacity-40 hover:bg-cyan-50"
+                      >
+                        <ChevronLeft size={15} /> Anterior
+                      </button>
+                      <span className="text-xs text-slate-500">Página {categoryPage + 1} de {Math.ceil(filteredCategories.length / CATEGORY_PAGE_SIZE)} · {filteredCategories.length} categorías</span>
+                      <button
+                        type="button"
+                        disabled={(categoryPage + 1) * CATEGORY_PAGE_SIZE >= filteredCategories.length}
+                        onClick={() => setCategoryPage((p) => p + 1)}
+                        className="inline-flex items-center gap-1 px-3 py-2 rounded-lg border border-cyan-200 text-sm font-semibold text-cyan-700 disabled:opacity-40 hover:bg-cyan-50"
+                      >
+                        Siguiente <ChevronRight size={15} />
+                      </button>
+                    </div>
+                  ) : null}
+                </>
+              );
+            })()}
           </div>
         </section>
       ) : null}
@@ -730,10 +1041,11 @@ export default function AdminPanel({
           </h3>
           <form onSubmit={submitUser} className="space-y-3">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <input required value={userForm.fullName} onChange={(e) => setUserForm((prev) => ({ ...prev, fullName: e.target.value }))} placeholder="Nombre completo" className="px-3 py-2.5 border border-cyan-200 rounded-lg" />
-              <input required type="email" value={userForm.email} onChange={(e) => setUserForm((prev) => ({ ...prev, email: e.target.value }))} placeholder="Correo" className="px-3 py-2.5 border border-cyan-200 rounded-lg" />
-              <input type="password" value={userForm.password} onChange={(e) => setUserForm((prev) => ({ ...prev, password: e.target.value }))} placeholder={editingUserId ? 'Nueva contrasena (opcional)' : 'Contrasena'} className="px-3 py-2.5 border border-cyan-200 rounded-lg" />
+              <input required minLength={3} maxLength={160} value={userForm.fullName} onChange={(e) => setUserForm((prev) => ({ ...prev, fullName: e.target.value }))} placeholder="Nombre completo" className="px-3 py-2.5 border border-cyan-200 rounded-lg" />
+              <input required type="email" autoComplete="email" value={userForm.email} onChange={(e) => setUserForm((prev) => ({ ...prev, email: e.target.value }))} placeholder="Correo" className="px-3 py-2.5 border border-cyan-200 rounded-lg" />
+              <input type="password" minLength={editingUserId ? 0 : 6} autoComplete={editingUserId ? 'new-password' : 'new-password'} value={userForm.password} onChange={(e) => setUserForm((prev) => ({ ...prev, password: e.target.value }))} placeholder={editingUserId ? 'Nueva contrasena (opcional)' : 'Contrasena'} className="px-3 py-2.5 border border-cyan-200 rounded-lg" />
             </div>
+            {userFormError ? <p className="text-sm text-rose-700">{userFormError}</p> : null}
             <label className="inline-flex items-center gap-2 text-sm text-cyan-800">
               <input type="checkbox" checked={userForm.isActive} onChange={(e) => setUserForm((prev) => ({ ...prev, isActive: e.target.checked }))} />
               Usuario activo
@@ -763,27 +1075,79 @@ export default function AdminPanel({
 
           <div className="mt-5 border-t border-cyan-100 pt-4">
             <p className="text-sm font-semibold text-cyan-800 mb-2">Perfiles creados</p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-              {users.map((user) => (
-                <div key={user.email} className="rounded-lg border border-slate-200 px-3 py-2 bg-slate-50">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="font-semibold text-slate-800">{user.fullName}</p>
-                      <p className="text-xs text-slate-500">{user.email}</p>
-                      <p className="text-xs text-cyan-700">Roles: {user.roles.join(', ')}</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button type="button" onClick={() => startEditUser(user)} className="inline-flex items-center gap-1 text-xs font-semibold text-cyan-700 hover:text-cyan-900">
-                        <Pencil size={14} /> Editar
-                      </button>
-                      <button type="button" onClick={() => removeUser(user)} className="inline-flex items-center gap-1 text-xs font-semibold text-rose-700 hover:text-rose-900">
-                        <Trash2 size={14} /> Eliminar
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
+            <div className="relative mb-3">
+              <input
+                type="text"
+                value={userSearch}
+                onChange={(e) => { setUserSearch(e.target.value); setUserPage(0); }}
+                placeholder="Buscar usuario por nombre, correo o rol..."
+                className="w-full pl-9 pr-3 py-2.5 border border-cyan-200 rounded-xl text-sm focus:ring-2 focus:ring-cyan-500 focus:outline-none"
+              />
+              <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
             </div>
+
+            {(() => {
+              const q = userSearch.toLowerCase().trim();
+              const filteredUsers = users.filter((user) =>
+                !q ||
+                user.fullName?.toLowerCase().includes(q) ||
+                user.email?.toLowerCase().includes(q) ||
+                user.roles?.join(' ').toLowerCase().includes(q)
+              );
+              const paginatedUsers = filteredUsers.slice(userPage * USER_PAGE_SIZE, (userPage + 1) * USER_PAGE_SIZE);
+
+              if (filteredUsers.length === 0) {
+                return <p className="text-sm text-slate-400 text-center py-6">Sin usuarios para mostrar.</p>;
+              }
+
+              return (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    {paginatedUsers.map((user) => (
+                      <div key={user.email} className="rounded-lg border border-slate-200 px-3 py-2 bg-slate-50">
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <p className="font-semibold text-slate-800">{user.fullName}</p>
+                            <p className="text-xs text-slate-500">{user.email}</p>
+                            <p className="text-xs text-cyan-700">Roles: {user.roles.join(', ')}</p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button type="button" onClick={() => startEditUser(user)} className="inline-flex items-center gap-1 text-xs font-semibold text-cyan-700 hover:text-cyan-900">
+                              <Pencil size={14} /> Editar
+                            </button>
+                            <button type="button" onClick={() => removeUser(user)} className="inline-flex items-center gap-1 text-xs font-semibold text-rose-700 hover:text-rose-900">
+                              <Trash2 size={14} /> Eliminar
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {filteredUsers.length > USER_PAGE_SIZE ? (
+                    <div className="flex items-center justify-between mt-4 pt-3 border-t border-cyan-100">
+                      <button
+                        type="button"
+                        disabled={userPage === 0}
+                        onClick={() => setUserPage((p) => p - 1)}
+                        className="inline-flex items-center gap-1 px-3 py-2 rounded-lg border border-cyan-200 text-sm font-semibold text-cyan-700 disabled:opacity-40 hover:bg-cyan-50"
+                      >
+                        <ChevronLeft size={15} /> Anterior
+                      </button>
+                      <span className="text-xs text-slate-500">Página {userPage + 1} de {Math.ceil(filteredUsers.length / USER_PAGE_SIZE)} · {filteredUsers.length} usuarios</span>
+                      <button
+                        type="button"
+                        disabled={(userPage + 1) * USER_PAGE_SIZE >= filteredUsers.length}
+                        onClick={() => setUserPage((p) => p + 1)}
+                        className="inline-flex items-center gap-1 px-3 py-2 rounded-lg border border-cyan-200 text-sm font-semibold text-cyan-700 disabled:opacity-40 hover:bg-cyan-50"
+                      >
+                        Siguiente <ChevronRight size={15} />
+                      </button>
+                    </div>
+                  ) : null}
+                </>
+              );
+            })()}
           </div>
         </section>
       ) : null}
@@ -888,6 +1252,8 @@ export default function AdminPanel({
         </section>
       ) : null}
 
+      {activeSection === 'protocolIncidents' ? <ProtocolIncidentsPanel token={token} /> : null}
+
       {/* ── Modal crear/editar protocolo ──────────────────────────────────────── */}
       {showProtocolModal && (
         <div
@@ -935,15 +1301,31 @@ export default function AdminPanel({
                 <ProtocolPreview form={protocolForm} />
               ) : (
                 <form id="protocol-modal-form" onSubmit={submitProtocol} className="space-y-4">
+                  {protocolFormError ? (
+                    <div className="rounded-lg border border-red-200 bg-red-50 text-red-700 text-sm px-3 py-2">
+                      {protocolFormError}
+                    </div>
+                  ) : null}
+
                   {/* Fila 1: Código, Nombre, Categoría */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <div className="space-y-1">
                       <label className="text-xs font-semibold uppercase tracking-wide text-cyan-800">Código</label>
-                      <input required value={protocolForm.code} onChange={(e) => setProtocolField('code', e.target.value)} placeholder="Ej. E-01" className="w-full px-3 py-2.5 border border-cyan-200 rounded-lg text-sm" />
+                      <input value={protocolForm.code} onChange={(e) => setProtocolField('code', e.target.value.toUpperCase())} placeholder="Ej. E-01, H-03, F-12" className="w-full px-3 py-2.5 border border-cyan-200 rounded-lg text-sm" />
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-xs text-slate-400">Sugerido por categoría: {suggestedProtocolCode}</p>
+                        <button
+                          type="button"
+                          onClick={() => setProtocolField('code', suggestedProtocolCode)}
+                          className="text-xs font-semibold text-cyan-700 hover:text-cyan-900"
+                        >
+                          Usar sugerencia
+                        </button>
+                      </div>
                     </div>
                     <div className="space-y-1">
                       <label className="text-xs font-semibold uppercase tracking-wide text-cyan-800">Nombre del protocolo</label>
-                      <input required value={protocolForm.name} onChange={(e) => setProtocolField('name', e.target.value)} placeholder="Ej. Apertura de caja" className="w-full px-3 py-2.5 border border-cyan-200 rounded-lg text-sm" />
+                      <input required minLength={3} value={protocolForm.name} onChange={(e) => setProtocolField('name', e.target.value)} placeholder="Ej. Apertura de caja" className="w-full px-3 py-2.5 border border-cyan-200 rounded-lg text-sm" />
                     </div>
                     <div className="space-y-1">
                       <label className="text-xs font-semibold uppercase tracking-wide text-cyan-800">Categoría / tipo</label>
@@ -961,11 +1343,11 @@ export default function AdminPanel({
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div className="space-y-1">
                       <label className="text-xs font-semibold uppercase tracking-wide text-cyan-800">Descripción</label>
-                      <textarea required value={protocolForm.description} onChange={(e) => setProtocolField('description', e.target.value)} placeholder="Objetivo del protocolo" rows={2} className="w-full px-3 py-2.5 border border-cyan-200 rounded-lg text-sm" />
+                      <textarea required minLength={8} value={protocolForm.description} onChange={(e) => setProtocolField('description', e.target.value)} placeholder="Objetivo del protocolo" rows={2} className="w-full px-3 py-2.5 border border-cyan-200 rounded-lg text-sm" />
                     </div>
                     <div className="space-y-1">
                       <label className="text-xs font-semibold uppercase tracking-wide text-cyan-800">Situación detonante</label>
-                      <textarea required value={protocolForm.trigger} onChange={(e) => setProtocolField('trigger', e.target.value)} placeholder="¿Qué activa este protocolo?" rows={2} className="w-full px-3 py-2.5 border border-cyan-200 rounded-lg text-sm" />
+                      <textarea required minLength={5} value={protocolForm.trigger} onChange={(e) => setProtocolField('trigger', e.target.value)} placeholder="¿Qué activa este protocolo?" rows={2} className="w-full px-3 py-2.5 border border-cyan-200 rounded-lg text-sm" />
                     </div>
                   </div>
 
@@ -973,7 +1355,7 @@ export default function AdminPanel({
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <div className="space-y-1">
                       <label className="text-xs font-semibold uppercase tracking-wide text-cyan-800">Responsable</label>
-                      <input required value={protocolForm.responsible} onChange={(e) => setProtocolField('responsible', e.target.value)} placeholder="Área o rol" className="w-full px-3 py-2.5 border border-cyan-200 rounded-lg text-sm" />
+                      <input required minLength={3} value={protocolForm.responsible} onChange={(e) => setProtocolField('responsible', e.target.value)} placeholder="Área o rol" className="w-full px-3 py-2.5 border border-cyan-200 rounded-lg text-sm" />
                     </div>
                     <div className="space-y-1">
                       <label className="text-xs font-semibold uppercase tracking-wide text-cyan-800">Prioridad</label>
@@ -1012,7 +1394,7 @@ export default function AdminPanel({
                     <div className="space-y-2">
                       {protocolForm.areas.map((area, index) => (
                         <div key={`area-${index}`} className="flex items-center gap-2">
-                          <input required value={area} onChange={(e) => setProtocolAreaAt(index, e.target.value)} placeholder={`Área ${index + 1}`} className="w-full px-3 py-2.5 border border-cyan-200 rounded-lg text-sm" />
+                          <input required minLength={2} value={area} onChange={(e) => setProtocolAreaAt(index, e.target.value)} placeholder={`Área ${index + 1}`} className="w-full px-3 py-2.5 border border-cyan-200 rounded-lg text-sm" />
                           <button type="button" onClick={() => removeProtocolArea(index)} className="px-2.5 py-2 border border-rose-200 text-rose-700 rounded-lg text-xs font-semibold shrink-0">Quitar</button>
                         </div>
                       ))}
@@ -1029,6 +1411,7 @@ export default function AdminPanel({
                           <span className="w-6 h-6 rounded-full bg-cyan-100 text-cyan-700 flex items-center justify-center font-bold text-xs shrink-0">{index + 1}</span>
                           <input
                             required
+                            minLength={5}
                             value={step}
                             onChange={(e) => { const next = [...protocolForm.textSteps]; next[index] = e.target.value; setProtocolField('textSteps', next); }}
                             placeholder={`Paso ${index + 1}`}
@@ -1047,15 +1430,15 @@ export default function AdminPanel({
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <div className="space-y-1">
                       <label className="text-xs font-semibold uppercase tracking-wide text-cyan-800">Comunicación</label>
-                      <textarea required value={protocolForm.communicationRules} onChange={(e) => setProtocolField('communicationRules', e.target.value)} placeholder="A quién y cómo se reporta" rows={2} className="w-full px-3 py-2.5 border border-cyan-200 rounded-lg text-sm" />
+                      <textarea required minLength={5} value={protocolForm.communicationRules} onChange={(e) => setProtocolField('communicationRules', e.target.value)} placeholder="A quién y cómo se reporta" rows={2} className="w-full px-3 py-2.5 border border-cyan-200 rounded-lg text-sm" />
                     </div>
                     <div className="space-y-1">
                       <label className="text-xs font-semibold uppercase tracking-wide text-cyan-800">Criterios de cierre</label>
-                      <textarea required value={protocolForm.closingCriteria} onChange={(e) => setProtocolField('closingCriteria', e.target.value)} placeholder="Cuándo se da por terminado" rows={2} className="w-full px-3 py-2.5 border border-cyan-200 rounded-lg text-sm" />
+                      <textarea required minLength={5} value={protocolForm.closingCriteria} onChange={(e) => setProtocolField('closingCriteria', e.target.value)} placeholder="Cuándo se da por terminado" rows={2} className="w-full px-3 py-2.5 border border-cyan-200 rounded-lg text-sm" />
                     </div>
                     <div className="space-y-1">
                       <label className="text-xs font-semibold uppercase tracking-wide text-cyan-800">Recomendaciones</label>
-                      <textarea required value={protocolForm.recommendations} onChange={(e) => setProtocolField('recommendations', e.target.value)} placeholder="Buenas prácticas y advertencias" rows={2} className="w-full px-3 py-2.5 border border-cyan-200 rounded-lg text-sm" />
+                      <textarea required minLength={5} value={protocolForm.recommendations} onChange={(e) => setProtocolField('recommendations', e.target.value)} placeholder="Buenas prácticas y advertencias" rows={2} className="w-full px-3 py-2.5 border border-cyan-200 rounded-lg text-sm" />
                     </div>
                   </div>
 
@@ -1242,16 +1625,17 @@ export default function AdminPanel({
                     <label className="text-xs font-semibold uppercase tracking-wide text-cyan-800">Código de empleado</label>
                     <input
                       value={employeeForm.employeeCode}
-                      onChange={(e) => setEmployeeForm((p) => ({ ...p, employeeCode: e.target.value }))}
-                      placeholder="Ej. EMP-001 (auto si se deja vacío)"
-                      className="w-full px-3 py-2.5 border border-cyan-200 rounded-lg text-sm"
+                      readOnly
+                      placeholder="Se genera automáticamente"
+                      className="w-full px-3 py-2.5 border border-cyan-200 rounded-lg text-sm bg-slate-50 text-slate-600"
                     />
-                    <p className="text-xs text-slate-400">Se genera automáticamente si no lo defines.</p>
+                    <p className="text-xs text-slate-400">Se genera automáticamente al guardar.</p>
                   </div>
                   <div className="space-y-1">
                     <label className="text-xs font-semibold uppercase tracking-wide text-cyan-800">Nombre completo *</label>
                     <input
                       required
+                      minLength={3}
                       value={employeeForm.fullName}
                       onChange={(e) => setEmployeeForm((p) => ({ ...p, fullName: e.target.value }))}
                       placeholder="Nombre completo del empleado"
@@ -1262,6 +1646,7 @@ export default function AdminPanel({
                     <label className="text-xs font-semibold uppercase tracking-wide text-cyan-800">Correo electrónico</label>
                     <input
                       type="email"
+                      autoComplete="email"
                       value={employeeForm.email}
                       onChange={(e) => setEmployeeForm((p) => ({ ...p, email: e.target.value }))}
                       placeholder="correo@ejemplo.com"
@@ -1271,11 +1656,16 @@ export default function AdminPanel({
                   <div className="space-y-1">
                     <label className="text-xs font-semibold uppercase tracking-wide text-cyan-800">Teléfono</label>
                     <input
+                      type="tel"
+                      inputMode="numeric"
+                      pattern="\d{10}"
+                      maxLength={10}
                       value={employeeForm.phone}
-                      onChange={(e) => setEmployeeForm((p) => ({ ...p, phone: e.target.value }))}
-                      placeholder="Ej. 55 1234 5678"
+                      onChange={(e) => setEmployeeForm((p) => ({ ...p, phone: e.target.value.replace(/\D/g, '').slice(0, 10) }))}
+                      placeholder="10 dígitos"
                       className="w-full px-3 py-2.5 border border-cyan-200 rounded-lg text-sm"
                     />
+                    <p className="text-xs text-slate-400">Ejemplo: 5512345678</p>
                   </div>
                   <div className="space-y-1">
                     <label className="text-xs font-semibold uppercase tracking-wide text-cyan-800">Puesto</label>
@@ -1314,6 +1704,7 @@ export default function AdminPanel({
                     />
                   </div>
                 </div>
+                {employeeFormError ? <p className="text-sm text-rose-700">{employeeFormError}</p> : null}
 
                 <div className="space-y-1">
                   <label className="text-xs font-semibold uppercase tracking-wide text-cyan-800">Notas internas</label>

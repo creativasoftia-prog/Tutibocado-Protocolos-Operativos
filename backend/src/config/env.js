@@ -8,12 +8,20 @@ const envSchema = z.object({
   APP_NAME: z.string().default('Tutibocado Protocolos API'),
   PORT: z.coerce.number().default(4100),
 
+  DB_CLIENT: z.enum(['mssql', 'pg']).default('mssql'),
+
   DB_SERVER: z.string().min(1),
   DB_INSTANCE: z.string().optional().default(''),
   DB_PORT: z.coerce.number().int().positive().default(1433),
+  DB_HOST: z.string().optional().default('127.0.0.1'),
   DB_DATABASE: z.string().min(1),
   DB_USER: z.string().min(1),
   DB_PASSWORD: z.string().min(1),
+  DB_SSL: z
+    .string()
+    .optional()
+    .transform((value) => value === 'true')
+    .default('false'),
   DB_ENCRYPT: z
     .string()
     .optional()

@@ -15,6 +15,8 @@ import {
 import { api } from '../../api/client';
 import ReportCard from './ReportCard';
 import { EmptyState, Spinner, STATUS_CONFIG } from './shared';
+import { useToast } from '../../context/ToastContext';
+import ProtocolIncidentsPanel from '../protocols/ProtocolIncidentsPanel';
 
 const PAGE_SIZE = 12;
 
@@ -24,6 +26,8 @@ const STAT_DEFS = [
 ];
 
 export default function HRDashboard({ token }) {
+  const toast = useToast();
+  const [activeView, setActiveView] = useState('reports');
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState('');
@@ -46,8 +50,14 @@ export default function HRDashboard({ token }) {
   useEffect(() => { loadReports(); }, [loadReports]);
 
   const handleStatusChange = async (reportId, payload) => {
-    await api.updateHrReportStatus(token, reportId, payload);
-    await loadReports();
+    try {
+      await api.updateHrReportStatus(token, reportId, payload);
+      await loadReports();
+      toast.success('Reporte marcado como revisado.');
+    } catch (error) {
+      toast.error(error.message || 'No se pudo actualizar el reporte');
+      throw error;
+    }
   };
 
   // ── Estadísticas ────────────────────────────────────────────────────────────
@@ -173,7 +183,30 @@ export default function HRDashboard({ token }) {
         </div>
       </div>
 
-      {/* ── Área principal ──────────────────────────────────────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-[220px_minmax(0,1fr)] gap-5 items-start">
+        <aside className="bg-white rounded-2xl border border-cyan-100 shadow-sm p-2 lg:sticky lg:top-4">
+          <button
+            type="button"
+            onClick={() => setActiveView('reports')}
+            className={`w-full text-left px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
+              activeView === 'reports' ? 'bg-cyan-600 text-white' : 'text-slate-700 hover:bg-cyan-50'
+            }`}
+          >
+            Reportes RH
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveView('incidents')}
+            className={`w-full text-left px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
+              activeView === 'incidents' ? 'bg-cyan-600 text-white' : 'text-slate-700 hover:bg-cyan-50'
+            }`}
+          >
+            Incidencias de protocolos
+          </button>
+        </aside>
+
+        <div className="space-y-4">
+      {activeView === 'reports' ? (
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-5">
 
         {/* Sidebar empleados */}
@@ -338,6 +371,11 @@ export default function HRDashboard({ token }) {
               </button>
             </div>
           )}
+        </div>
+      </div>
+      ) : (
+        <ProtocolIncidentsPanel token={token} />
+      )}
         </div>
       </div>
     </div>

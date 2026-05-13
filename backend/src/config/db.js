@@ -1,6 +1,15 @@
 import knex from 'knex';
 import { env } from './env.js';
 
+const buildPostgresConnection = () => ({
+  host: (env.DB_HOST || env.DB_SERVER).trim(),
+  port: env.DB_PORT,
+  user: env.DB_USER,
+  password: env.DB_PASSWORD,
+  database: env.DB_DATABASE,
+  ...(env.DB_SSL ? { ssl: { rejectUnauthorized: false } } : {})
+});
+
 const parseLegacyServerValue = (serverValue) => {
   const normalizedServerValue = serverValue.replace(/\\+/g, '\\').trim();
 
@@ -27,6 +36,29 @@ const resolveSqlServerTarget = () => {
 };
 
 export const createDatabaseConfig = () => {
+  if (env.DB_CLIENT === 'pg') {
+    return {
+      client: 'pg',
+      connection: buildPostgresConnection(),
+      pool: {
+        min: 1,
+        max: 10,
+        acquireTimeoutMillis: 30000,
+        createTimeoutMillis: 30000,
+        destroyTimeoutMillis: 5000,
+        idleTimeoutMillis: 30000,
+        reapIntervalMillis: 1000,
+        createRetryIntervalMillis: 500
+      },
+      migrations: {
+        directory: './src/db/migrations'
+      },
+      seeds: {
+        directory: './src/db/seeds'
+      }
+    };
+  }
+
   const target = resolveSqlServerTarget();
 
   return {
@@ -72,3 +104,5 @@ export const checkDatabaseConnection = async () => {
     return 'error';
   }
 };
+
+export const isPostgresClient = () => env.DB_CLIENT === 'pg';

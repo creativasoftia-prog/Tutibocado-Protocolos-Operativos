@@ -46,14 +46,22 @@ export const findEmployeeByCode = async (code) => {
 
 export const createEmployee = async (payload) => {
   const code = payload.employeeCode?.trim() || (await generateCode());
+  const normalizedEmail = payload.email?.trim().toLowerCase() || null;
 
   const existing = await db('employees').where({ employee_code: code }).first();
   if (existing) throw new Error(`Ya existe un empleado con el código ${code}`);
 
-  const [id] = await db('employees').insert({
+  if (normalizedEmail) {
+    const existingEmail = await db('employees').whereRaw('LOWER(email) = ?', [normalizedEmail]).first('id');
+    if (existingEmail) {
+      throw new Error('Ya existe un empleado con ese correo electrónico');
+    }
+  }
+
+  const inserted = await db('employees').insert({
     employee_code: code,
     full_name: payload.fullName.trim(),
-    email: payload.email?.trim() || null,
+    email: normalizedEmail,
     phone: payload.phone?.trim() || null,
     department: payload.department?.trim() || null,
     branch: payload.branch?.trim() || null,
@@ -62,14 +70,28 @@ export const createEmployee = async (payload) => {
     is_active: payload.isActive !== false,
     notes: payload.notes?.trim() || null,
     user_id: payload.userId || null,
-  });
+  }).returning(['id']);
 
+  const first = Array.isArray(inserted) ? inserted[0] : inserted;
+  const id = typeof first === 'object' ? first.id : first;
   return getEmployeeById(id);
 };
 
 export const updateEmployee = async (id, payload) => {
   const existing = await db('employees').where({ id }).first();
   if (!existing) throw new Error('Empleado no encontrado');
+
+  if (payload.email !== undefined && payload.email) {
+    const normalizedEmail = payload.email.trim().toLowerCase();
+    const emailOwner = await db('employees')
+      .whereRaw('LOWER(email) = ?', [normalizedEmail])
+      .whereNot({ id })
+      .first('id');
+
+    if (emailOwner) {
+      throw new Error('Ya existe un empleado con ese correo electrónico');
+    }
+  }
 
   const updates = {
     updated_at: db.fn.now(),

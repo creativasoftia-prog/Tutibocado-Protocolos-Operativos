@@ -13,7 +13,11 @@ const request = async (path, { method = 'GET', token, body } = {}) => {
   const data = await response.json().catch(() => ({}));
 
   if (!response.ok) {
-    throw new Error(data.message || 'Request failed');
+    const fieldErrors = data?.errors?.fieldErrors || {};
+    const firstFieldError = Object.values(fieldErrors).find((items) => Array.isArray(items) && items.length > 0);
+    const detail = firstFieldError ? firstFieldError[0] : '';
+    const message = detail ? `${data.message || 'Request failed'}: ${detail}` : (data.message || 'Request failed');
+    throw new Error(message);
   }
 
   return data;
@@ -28,6 +32,8 @@ export const api = {
   deleteUser: (token, userId) => request(`/auth/users/${userId}`, { method: 'DELETE', token }),
   listRoles: (token) => request('/roles', { token }),
   createRole: (token, payload) => request('/roles', { method: 'POST', token, body: payload }),
+  updateRole: (token, roleName, payload) => request(`/roles/${encodeURIComponent(roleName)}`, { method: 'PUT', token, body: payload }),
+  deleteRole: (token, roleName) => request(`/roles/${encodeURIComponent(roleName)}`, { method: 'DELETE', token }),
   listProtocols: (token) => request('/protocols', { token }),
   createProtocol: (token, payload) => request('/protocols', { method: 'POST', token, body: payload }),
   updateProtocol: (token, protocolId, payload) => request(`/protocols/${protocolId}`, { method: 'PUT', token, body: payload }),
@@ -56,4 +62,18 @@ export const api = {
   createHrReport: (token, payload) => request('/hr-reports', { method: 'POST', token, body: payload }),
   updateHrReportStatus: (token, id, payload) => request(`/hr-reports/${id}/status`, { method: 'PATCH', token, body: payload }),
   deleteHrReport: (token, id) => request(`/hr-reports/${id}`, { method: 'DELETE', token }),
+
+  // ── Incidencias de protocolos ─────────────────────────────────────────────
+  createProtocolIncident: (token, payload) => request('/protocol-incidents', { method: 'POST', token, body: payload }),
+  listProtocolIncidents: (token, { status, entryType, protocolId, employeeId } = {}) => {
+    const params = new URLSearchParams();
+    if (status) params.set('status', status);
+    if (entryType) params.set('entryType', entryType);
+    if (protocolId) params.set('protocolId', protocolId);
+    if (employeeId) params.set('employeeId', employeeId);
+    const qs = params.toString() ? `?${params.toString()}` : '';
+    return request(`/protocol-incidents${qs}`, { token });
+  },
+  getProtocolIncidentsSummary: (token) => request('/protocol-incidents/summary', { token }),
+  updateProtocolIncidentStatus: (token, id, payload) => request(`/protocol-incidents/${id}/status`, { method: 'PATCH', token, body: payload }),
 };
