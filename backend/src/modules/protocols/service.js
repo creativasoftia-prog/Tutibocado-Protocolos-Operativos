@@ -12,6 +12,7 @@ const normalizeSlug = (value) =>
 
 const mapProtocolRowToPublic = (row, steps, visibilityRoleNames) => ({
   id: row.slug,
+  numericId: row.id,
   code: row.code,
   name: row.name,
   icon: row.icon || '',
@@ -81,8 +82,11 @@ export const listVisibleProtocols = async (userRoles) => {
 
   if (!userRoles.includes('administrador')) {
     query
-      .innerJoin('protocol_visibility_roles as pvr', 'pvr.protocol_id', 'p.id')
-      .innerJoin('roles as r', 'r.id', 'pvr.role_id')
+      .leftJoin('protocol_visibility_roles as pvr', 'pvr.protocol_id', 'p.id')
+      .leftJoin('role_category_visibility as rcv', 'rcv.protocol_type_id', 'p.protocol_type_id')
+      .innerJoin('roles as r', function() {
+        this.on('r.id', '=', 'pvr.role_id').orOn('r.id', '=', 'rcv.role_id');
+      })
       .whereIn('r.name', userRoles)
       .groupBy(
         'p.id',
@@ -334,6 +338,7 @@ export const listCategories = async () => {
 
   return rows.map((row) => ({
     id: normalizeSlug(row.name),
+    numericId: row.id,
     name: row.name,
     protocolsCount: Number(row.protocolsCount || 0)
   }));

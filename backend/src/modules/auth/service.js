@@ -93,7 +93,8 @@ export const createUserWithRoles = async ({ fullName, email, password, roleNames
       })
       .returning(['id', 'full_name as fullName', 'email']);
 
-    const roles = await trx('roles').whereIn('name', roleNames).select('id', 'name');
+    const normalizedRoleNames = roleNames.map(name => name.trim().toLowerCase());
+    const roles = await trx('roles').whereIn('name', normalizedRoleNames).select('id', 'name');
 
     if (roles.length !== roleNames.length) {
       throw new Error('Uno o más roles no existen');
@@ -140,7 +141,8 @@ export const updateUserWithRoles = async ({ userId, fullName, email, password, r
 
     await trx('users').where({ id: userId }).update(updatePayload);
 
-    const roles = await trx('roles').whereIn('name', roleNames).select('id', 'name');
+    const normalizedRoleNames = roleNames.map(name => name.trim().toLowerCase());
+    const roles = await trx('roles').whereIn('name', normalizedRoleNames).select('id', 'name');
 
     if (roles.length !== roleNames.length) {
       throw new Error('Uno o más roles no existen');

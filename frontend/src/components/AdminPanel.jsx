@@ -252,7 +252,14 @@ const emptyProtocol = {
   visibleForRoles: ['supervisor', 'sucursal']
 };
 
-const emptyRole = { name: '', description: '' };
+const emptyRole = { 
+  name: '', 
+  description: '',
+  permissions: {
+    categoryIds: [],
+    protocolIds: []
+  }
+};
 
 const emptyUser = {
   fullName: '',
@@ -522,7 +529,11 @@ export default function AdminPanel({
       return;
     }
 
-    const payload = { name: roleForm.name.trim(), description: roleForm.description.trim() };
+    const payload = { 
+      name: roleForm.name.trim(), 
+      description: roleForm.description.trim(),
+      permissions: roleForm.permissions
+    };
     if (editingRoleName) {
       await onUpdateRole(editingRoleName, payload);
     } else {
@@ -537,7 +548,8 @@ export default function AdminPanel({
     setEditingRoleName(role.name);
     setRoleForm({
       name: role.name,
-      description: role.description || ''
+      description: role.description || '',
+      permissions: role.permissions || { categoryIds: [], protocolIds: [] }
     });
     setRoleFormError('');
   };
@@ -852,18 +864,98 @@ export default function AdminPanel({
           <h3 className="font-heading font-semibold text-cyan-900 text-xl mb-4 flex items-center gap-2">
             <ShieldPlus size={20} /> {editingRoleName ? 'Editar rol' : 'Crear rol'}
           </h3>
-          <form onSubmit={submitRole} className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <input required minLength={3} maxLength={80} value={roleForm.name} onChange={(e) => setRoleForm((prev) => ({ ...prev, name: e.target.value }))} placeholder="Nombre del rol" className="px-3 py-2.5 border border-cyan-200 rounded-lg" />
-            <input required minLength={3} maxLength={300} value={roleForm.description} onChange={(e) => setRoleForm((prev) => ({ ...prev, description: e.target.value }))} placeholder="Descripcion" className="px-3 py-2.5 border border-cyan-200 rounded-lg" />
-            <div className="flex items-center gap-2">
-              <button className="bg-cyan-600 text-white rounded-lg font-semibold px-4 py-2.5 flex-1">
-                {editingRoleName ? 'Guardar cambios' : 'Guardar rol'}
-              </button>
-              {editingRoleName ? (
-                <button type="button" onClick={cancelEditRole} className="bg-white border border-slate-200 text-slate-700 rounded-lg font-semibold px-4 py-2.5">
-                  Cancelar
+          <form onSubmit={submitRole} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <input required minLength={3} maxLength={80} value={roleForm.name} onChange={(e) => setRoleForm((prev) => ({ ...prev, name: e.target.value }))} placeholder="Nombre del rol" className="px-3 py-2.5 border border-cyan-200 rounded-lg" />
+              <input required minLength={3} maxLength={300} value={roleForm.description} onChange={(e) => setRoleForm((prev) => ({ ...prev, description: e.target.value }))} placeholder="Descripcion" className="px-3 py-2.5 border border-cyan-200 rounded-lg" />
+              <div className="flex items-center gap-2">
+                <button className="bg-cyan-600 text-white rounded-lg font-semibold px-4 py-2.5 flex-1">
+                  {editingRoleName ? 'Guardar cambios' : 'Guardar rol'}
                 </button>
-              ) : null}
+                {editingRoleName ? (
+                  <button type="button" onClick={cancelEditRole} className="bg-white border border-slate-200 text-slate-700 rounded-lg font-semibold px-4 py-2.5">
+                    Cancelar
+                  </button>
+                ) : null}
+              </div>
+            </div>
+
+            <div className="mt-4 border border-cyan-100 rounded-xl overflow-hidden">
+              <div className="bg-cyan-50/50 px-4 py-2 border-b border-cyan-100">
+                <p className="text-xs font-bold uppercase tracking-widest text-cyan-800">Permisos del Rol (Protocolos y Categorías)</p>
+              </div>
+              <div className="p-4 bg-white space-y-3">
+                {categories.map((cat) => {
+                  const catProtocols = protocols.filter(p => p.type === cat.name);
+                  const isCatSelected = roleForm.permissions.categoryIds.includes(cat.numericId);
+                  
+                  return (
+                    <div key={cat.id} className="border border-slate-100 rounded-lg overflow-hidden">
+                      <div className="flex items-center justify-between px-3 py-2 bg-slate-50/50">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input 
+                            type="checkbox" 
+                            className="rounded border-cyan-300 text-cyan-600 focus:ring-cyan-500"
+                            checked={isCatSelected} 
+                            onChange={() => {
+                              const nextCatIds = isCatSelected 
+                                ? roleForm.permissions.categoryIds.filter(id => id !== cat.numericId)
+                                : [...roleForm.permissions.categoryIds, cat.numericId];
+                              
+                              // Si marcamos categoría, limpiamos protocolos individuales de esa categoría para evitar redundancia
+                              const nextProtoIds = isCatSelected 
+                                ? roleForm.permissions.protocolIds 
+                                : roleForm.permissions.protocolIds.filter(pid => !catProtocols.some(cp => cp.numericId === pid));
+
+                              setRoleForm(prev => ({
+                                ...prev,
+                                permissions: { categoryIds: nextCatIds, protocolIds: nextProtoIds }
+                              }));
+                            }} 
+                          />
+                          <span className="text-sm font-bold text-slate-800">{cat.name}</span>
+                          <span className="text-[10px] bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded-full">{catProtocols.length}</span>
+                        </label>
+                        <p className="text-[10px] text-slate-400 italic">
+                          {isCatSelected ? 'Acceso total concedido' : 'Selección granular'}
+                        </p>
+                      </div>
+
+                      <div className={`p-3 bg-white grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 ${isCatSelected ? 'opacity-50' : ''}`}>
+                        {catProtocols.map((proto) => {
+                          const isProtoSelected = isCatSelected || roleForm.permissions.protocolIds.includes(proto.numericId);
+                          return (
+                            <label key={proto.id} className="flex items-center gap-2 p-1.5 rounded-md hover:bg-slate-50 cursor-pointer">
+                              <input 
+                                type="checkbox" 
+                                className="rounded border-cyan-200 text-cyan-600 focus:ring-cyan-500 disabled:opacity-50"
+                                disabled={isCatSelected}
+                                checked={isProtoSelected}
+                                onChange={() => {
+                                  if (isCatSelected) return;
+                                  const exists = roleForm.permissions.protocolIds.includes(proto.numericId);
+                                  const nextProtoIds = exists 
+                                    ? roleForm.permissions.protocolIds.filter(id => id !== proto.numericId)
+                                    : [...roleForm.permissions.protocolIds, proto.numericId];
+                                  
+                                  setRoleForm(prev => ({
+                                    ...prev,
+                                    permissions: { ...prev.permissions, protocolIds: nextProtoIds }
+                                  }));
+                                }}
+                              />
+                              <span className="text-xs text-slate-700 truncate" title={proto.name}>
+                                <span className="font-mono text-[10px] text-cyan-600 mr-1">{proto.code}</span>
+                                {proto.name}
+                              </span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </form>
           {roleFormError ? <p className="mt-2 text-sm text-rose-700">{roleFormError}</p> : null}

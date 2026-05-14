@@ -9,16 +9,60 @@ rolesRouter.use(authenticate);
 
 rolesRouter.get('/', async (_req, res) => {
   const roles = await db('roles')
-    .select('name', 'description', 'is_system as isSystem', 'created_at as createdAt')
+    .select('id', 'name', 'description', 'is_system as isSystem', 'created_at as createdAt')
     .orderBy('name', 'asc');
 
-  return res.json(roles);
+  const rolesWithPermissions = await Promise.all(
+    roles.map(async (role) => {
+      const categoryIds = await db('role_category_visibility')
+        .where({ role_id: role.id })
+        .pluck('protocol_type_id');
+      
+      const protocolIds = await db('protocol_visibility_roles')
+        .where({ role_id: role.id })
+        .pluck('protocol_id');
+
+      return {
+        ...role,
+        permissions: {
+          categoryIds,
+          protocolIds
+        }
+      };
+    })
+  );
+
+  return res.json(rolesWithPermissions);
 });
 
 const createRoleSchema = z.object({
   name: z.string().min(3, 'El nombre del rol debe tener al menos 3 caracteres'),
-  description: z.string().min(3, 'La descripción debe tener al menos 3 caracteres').max(300, 'La descripción no puede exceder 300 caracteres').optional().default('')
+  description: z.string().min(3, 'La descripción debe tener al menos 3 caracteres').max(300, 'La descripción no puede exceder 300 caracteres').optional().default(''),
+  permissions: z.object({
+    categoryIds: z.array(z.number()).optional().default([]),
+    protocolIds: z.array(z.number()).optional().default([])
+  }).optional().default({ categoryIds: [], protocolIds: [] })
 });
+
+async function updateRolePermissions(trx, roleId, permissions) {
+  const { categoryIds, protocolIds } = permissions;
+
+  // Actualizar categorías
+  await trx('role_category_visibility').where({ role_id: roleId }).del();
+  if (categoryIds.length > 0) {
+    await trx('role_category_visibility').insert(
+      categoryIds.map(id => ({ role_id: roleId, protocol_type_id: id }))
+    );
+  }
+
+  // Actualizar protocolos específicos
+  await trx('protocol_visibility_roles').where({ role_id: roleId }).del();
+  if (protocolIds.length > 0) {
+    await trx('protocol_visibility_roles').insert(
+      protocolIds.map(id => ({ role_id: roleId, protocol_id: id }))
+    );
+  }
+}
 
 rolesRouter.post('/', requireAnyRole('administrador'), async (req, res) => {
   const parsed = createRoleSchema.safeParse(req.body);
@@ -34,15 +78,21 @@ rolesRouter.post('/', requireAnyRole('administrador'), async (req, res) => {
     return res.status(409).json({ message: 'El rol ya existe' });
   }
 
-  const [role] = await db('roles')
-    .insert({
-      name: normalizedName,
-      description: parsed.data.description?.trim() || '',
-      is_system: false
-    })
-    .returning(['name', 'description', 'is_system as isSystem', 'created_at as createdAt']);
+  const result = await db.transaction(async (trx) => {
+    const [role] = await trx('roles')
+      .insert({
+        name: normalizedName,
+        description: parsed.data.description?.trim() || '',
+        is_system: false
+      })
+      .returning(['id', 'name', 'description', 'is_system as isSystem', 'created_at as createdAt']);
 
-  return res.status(201).json(role);
+    await updateRolePermissions(trx, role.id, parsed.data.permissions);
+
+    return { ...role, permissions: parsed.data.permissions };
+  });
+
+  return res.status(201).json(result);
 });
 
 rolesRouter.put('/:roleName', requireAnyRole('administrador'), async (req, res) => {
@@ -67,15 +117,21 @@ rolesRouter.put('/:roleName', requireAnyRole('administrador'), async (req, res) 
     return res.status(409).json({ message: 'El rol ya existe' });
   }
 
-  const [updated] = await db('roles')
-    .where({ id: existing.id })
-    .update({
-      name: nextName,
-      description: parsed.data.description?.trim() || ''
-    })
-    .returning(['name', 'description', 'is_system as isSystem', 'created_at as createdAt']);
+  const result = await db.transaction(async (trx) => {
+    const [updated] = await trx('roles')
+      .where({ id: existing.id })
+      .update({
+        name: nextName,
+        description: parsed.data.description?.trim() || ''
+      })
+      .returning(['id', 'name', 'description', 'is_system as isSystem', 'created_at as createdAt']);
 
-  return res.json(updated);
+    await updateRolePermissions(trx, updated.id, parsed.data.permissions);
+
+    return { ...updated, permissions: parsed.data.permissions };
+  });
+
+  return res.json(result);
 });
 
 rolesRouter.delete('/:roleName', requireAnyRole('administrador'), async (req, res) => {
@@ -94,11 +150,8 @@ rolesRouter.delete('/:roleName', requireAnyRole('administrador'), async (req, re
     return res.status(409).json({ message: 'No se puede eliminar el rol porque tiene cuentas asignadas' });
   }
 
-  const [assignedProtocols] = await db('protocol_visibility_roles').where({ role_id: role.id }).count('protocol_id as count');
-  if (Number(assignedProtocols?.count || 0) > 0) {
-    return res.status(409).json({ message: 'No se puede eliminar el rol porque está asignado a protocolos' });
-  }
-
+  // Nota: Al eliminar el rol, las tablas de visibilidad se limpian por ON DELETE CASCADE
   await db('roles').where({ id: role.id }).del();
   return res.json({ deleted: true });
 });
+
