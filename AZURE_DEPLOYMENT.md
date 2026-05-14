@@ -51,7 +51,7 @@ Este documento describe la infraestructura y los pasos para el despliegue del si
    ```
 2. Desplegar a Static Web Apps:
    ```bash
-   swa deploy ./dist --deployment-token <TOKEN> --env production
+   swa deploy ./dist --deployment-token 273f8dbb16be35d93beaaf7e3fdf7346b4a0aa0712013e741e444a252ceb807907-010b9be2-2105-4056-8a9f-02cc251b5b3600f1420040f06d0f --env production
    ```
 
 ## Mantenimiento y Base de Datos
