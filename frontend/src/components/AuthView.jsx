@@ -2,8 +2,8 @@ import React from 'react';
 import { Shield, LogIn } from 'lucide-react';
 
 export default function AuthView({ onLogin, isLoading, error }) {
-  const [email, setEmail] = React.useState('admin@tutibocado.local');
-  const [password, setPassword] = React.useState('Admin123!');
+  const [email, setEmail] = React.useState('');
+  const [password, setPassword] = React.useState('');
   const [localError, setLocalError] = React.useState('');
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
