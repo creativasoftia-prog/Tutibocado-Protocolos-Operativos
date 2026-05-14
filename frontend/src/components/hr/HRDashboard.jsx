@@ -113,7 +113,7 @@ export default function HRDashboard({ token }) {
             </div>
             <div>
               <h2 className="font-heading font-bold text-xl">Capital Humano</h2>
-              <p className="text-cyan-200 text-sm">Gestión de reportes y justificantes del personal</p>
+              <p className="text-cyan-200 text-sm">Gestión de reportes y justificantes de los colaboradores</p>
             </div>
           </div>
           <button
@@ -141,7 +141,7 @@ export default function HRDashboard({ token }) {
             </div>
             <div>
               <p className="text-xl font-bold">{totalEmployees}</p>
-              <p className="text-cyan-200 text-xs">Empleados con reportes</p>
+              <p className="text-cyan-200 text-xs">Colaboradores con reportes</p>
             </div>
           </div>
           <div className={`rounded-xl border px-4 py-3 flex items-center gap-3 col-span-2 sm:col-span-1 ${
@@ -209,12 +209,12 @@ export default function HRDashboard({ token }) {
       {activeView === 'reports' ? (
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-5">
 
-        {/* Sidebar empleados */}
+        {/* Sidebar colaboradores */}
         <div className="lg:col-span-1 space-y-4">
-          {/* Lista de empleados */}
+          {/* Lista de colaboradores */}
           <div className="bg-white rounded-2xl border border-cyan-100 shadow-sm p-4">
             <p className="text-xs font-semibold uppercase tracking-wide text-cyan-800 flex items-center gap-1.5 mb-3">
-              <Users size={13} /> Empleados ({employeesWithReports.length})
+              <Users size={13} /> Colaboradores ({employeesWithReports.length})
             </p>
             <div className="space-y-1 max-h-[380px] overflow-y-auto">
               <button
@@ -223,7 +223,7 @@ export default function HRDashboard({ token }) {
                   !activeEmployee ? 'bg-cyan-600 text-white font-semibold' : 'hover:bg-slate-50 text-slate-700'
                 }`}
               >
-                <span>Todos los empleados</span>
+                <span>Todos los colaboradores</span>
                 <span className={`text-xs px-1.5 py-0.5 rounded-full font-bold shrink-0 ${
                   !activeEmployee ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'
                 }`}>{reports.length}</span>

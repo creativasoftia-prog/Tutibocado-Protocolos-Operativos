@@ -42,12 +42,12 @@ export default function ReportForm({ token, onSuccess, onCancel }) {
     setErrors((prev) => ({ ...prev, [key]: '' }));
   };
 
-  // ── Validar empleado por código ────────────────────────────────────────────
+  // ── Validar colaborador por código ────────────────────────────────────────────
   const handleValidateEmployee = async () => {
     const normalizedCode = form.employeeCode.trim().toUpperCase();
 
     if (!normalizedCode) {
-      setErrors((prev) => ({ ...prev, employeeCode: 'Escribe tu número de empleado' }));
+      setErrors((prev) => ({ ...prev, employeeCode: 'Escribe tu número de colaborador' }));
       return;
     }
 
@@ -66,7 +66,7 @@ export default function ReportForm({ token, onSuccess, onCancel }) {
     } catch {
       setErrors((prev) => ({
         ...prev,
-        employeeCode: 'No se encontró un empleado activo con ese código. Verifica con tu supervisor.',
+        employeeCode: 'No se encontró un colaborador activo con ese código. Verifica con tu supervisor.',
       }));
     } finally {
       setValidating(false);
@@ -79,7 +79,7 @@ export default function ReportForm({ token, onSuccess, onCancel }) {
     const newErrors = {};
 
     if (!validatedEmployee) {
-      newErrors.employeeCode = 'Debes verificar tu número de empleado primero';
+      newErrors.employeeCode = 'Debes verificar tu número de colaborador primero';
     }
     if (!form.type) newErrors.type = 'Selecciona un tipo';
     if (!form.subject.trim() || form.subject.trim().length < 5) {
@@ -149,7 +149,7 @@ export default function ReportForm({ token, onSuccess, onCancel }) {
           <User size={15} /> Verificación de identidad
         </p>
         <p className="text-xs text-cyan-700">
-          Ingresa tu número de empleado para que Capital Humano pueda identificarte. Sin verificación no es posible enviar el reporte.
+          Ingresa tu número de colaborador para que Capital Humano pueda identificarte. Sin verificación no es posible enviar el reporte.
         </p>
         <div className="flex gap-2">
           <div className="flex-1">

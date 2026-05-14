@@ -278,10 +278,10 @@ function App() {
     try {
       await api.createEmployee(token, payload);
       await refreshAdminData();
-      toast.success('Empleado registrado correctamente.');
+      toast.success('Colaborador registrado correctamente.');
     } catch (error) {
-      setActionError(error.message || 'No se pudo registrar el empleado');
-      toast.error(error.message || 'No se pudo registrar el empleado');
+      setActionError(error.message || 'No se pudo registrar el colaborador');
+      toast.error(error.message || 'No se pudo registrar el colaborador');
       throw error;
     }
   };
@@ -290,10 +290,10 @@ function App() {
     try {
       await api.updateEmployee(token, employeeId, payload);
       await refreshAdminData();
-      toast.success('Empleado actualizado correctamente.');
+      toast.success('Colaborador actualizado correctamente.');
     } catch (error) {
-      setActionError(error.message || 'No se pudo actualizar el empleado');
-      toast.error(error.message || 'No se pudo actualizar el empleado');
+      setActionError(error.message || 'No se pudo actualizar el colaborador');
+      toast.error(error.message || 'No se pudo actualizar el colaborador');
       throw error;
     }
   };
@@ -302,10 +302,10 @@ function App() {
     try {
       await api.deleteEmployee(token, employeeId);
       await refreshAdminData();
-      toast.success('Empleado eliminado correctamente.');
+      toast.success('Colaborador eliminado correctamente.');
     } catch (error) {
-      setActionError(error.message || 'No se pudo eliminar el empleado');
-      toast.error(error.message || 'No se pudo eliminar el empleado');
+      setActionError(error.message || 'No se pudo eliminar el colaborador');
+      toast.error(error.message || 'No se pudo eliminar el colaborador');
       throw error;
     }
   };

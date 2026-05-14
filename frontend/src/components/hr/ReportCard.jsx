@@ -56,7 +56,7 @@ export default function ReportCard({ report, canManage = false, onStatusChange }
           <p className="font-semibold text-slate-800 text-sm truncate">{report.subject}</p>
           <div className="flex flex-wrap items-center gap-3 mt-1">
             <span className="text-xs text-slate-500 flex items-center gap-1">
-              <User size={11} /> {report.employeeName || 'Empleado'} ({report.employeeCode})
+              <User size={11} /> {report.employeeName || 'Colaborador'} ({report.employeeCode})
             </span>
             {report.employeeBranch && (
               <span className="text-xs text-slate-500 flex items-center gap-1">

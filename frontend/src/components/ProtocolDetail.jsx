@@ -94,7 +94,7 @@ export default function ProtocolDetail({ protocol, onBack, onCreateProtocolIncid
 
     const employeeCode = incidentForm.employeeCode.trim().toUpperCase();
     if (!EMPLOYEE_CODE_REGEX.test(employeeCode)) {
-      setIncidentError('El código de empleado debe tener formato EMP-001.');
+      setIncidentError('El código de colaborador debe tener formato EMP-001.');
       return;
     }
 
@@ -242,7 +242,7 @@ export default function ProtocolDetail({ protocol, onBack, onCreateProtocolIncid
                   </select>
                 </label>
                 <label className="space-y-1">
-                  <span className="text-xs font-semibold uppercase tracking-wide text-cyan-800">Código de empleado *</span>
+                  <span className="text-xs font-semibold uppercase tracking-wide text-cyan-800">Código de colaborador *</span>
                   <input
                     required
                     value={incidentForm.employeeCode}

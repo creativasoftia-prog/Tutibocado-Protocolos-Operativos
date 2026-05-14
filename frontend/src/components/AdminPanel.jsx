@@ -751,7 +751,7 @@ export default function AdminPanel({
     { key: 'protocols',  label: 'Protocolos', Icon: FolderKanban, count: protocols.length },
     { key: 'protocolIncidents', label: 'Incidencias', Icon: ClipboardList, count: null },
     { key: 'users',      label: 'Perfiles',   Icon: Users,        count: users.length },
-    { key: 'employees',  label: 'Empleados',  Icon: UserCheck,    count: employees?.length || 0 },
+    { key: 'employees',  label: 'Colaboradores',  Icon: UserCheck,    count: employees?.length || 0 },
     { key: 'categories', label: 'Categorías', Icon: Tags,         count: categories.length },
     { key: 'roles',      label: 'Roles',      Icon: KeyRound,     count: roles.length },
   ];
@@ -1618,7 +1618,7 @@ export default function AdminPanel({
             if (filtered.length === 0) {
               return (
                 <p className="text-sm text-slate-400 text-center py-8">
-                  {(employees || []).length === 0 ? 'No hay empleados registrados.' : 'Sin resultados para esa búsqueda.'}
+                  {(employees || []).length === 0 ? 'No hay colaboradores registrados.' : 'Sin resultados para esa búsqueda.'}
                 </p>
               );
             }
@@ -1675,7 +1675,7 @@ export default function AdminPanel({
                       <ChevronLeft size={15} /> Anterior
                     </button>
                     <span className="text-xs text-slate-500">
-                      Página {employeePage + 1} de {Math.ceil(filtered.length / EMPLOYEE_PAGE_SIZE)} · {filtered.length} empleados
+                      Página {employeePage + 1} de {Math.ceil(filtered.length / EMPLOYEE_PAGE_SIZE)} · {filtered.length} colaboradores
                     </span>
                     <button
                       type="button"
@@ -1714,7 +1714,7 @@ export default function AdminPanel({
               <form id="employee-modal-form" onSubmit={submitEmployee} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <label className="text-xs font-semibold uppercase tracking-wide text-cyan-800">Código de empleado</label>
+                    <label className="text-xs font-semibold uppercase tracking-wide text-cyan-800">Código de colaborador</label>
                     <input
                       value={employeeForm.employeeCode}
                       readOnly
@@ -1730,7 +1730,7 @@ export default function AdminPanel({
                       minLength={3}
                       value={employeeForm.fullName}
                       onChange={(e) => setEmployeeForm((p) => ({ ...p, fullName: e.target.value }))}
-                      placeholder="Nombre completo del empleado"
+                      placeholder="Nombre completo del colaborador"
                       className="w-full px-3 py-2.5 border border-cyan-200 rounded-lg text-sm"
                     />
                   </div>

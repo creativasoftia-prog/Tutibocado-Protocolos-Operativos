@@ -149,8 +149,8 @@ export const protocolsData = [
   {
     id: 'personal',
     code: 'H-01',
-    name: 'Incidencia de personal',
-    description: 'Gestión de incidencias de conducta o faltas del personal de la sucursal.',
+    name: 'Incidencia de colaboradores',
+    description: 'Gestión de incidencias de conducta o faltas de los colaboradores de la sucursal.',
     trigger: 'Falta injustificada, retardo mayor, mala conducta',
     responsible: 'Líder de tienda',
     areas: ['Operaciones', 'Capital Humano'],
@@ -185,7 +185,7 @@ export const protocolsData = [
       'Paso 5: Para soporte técnico relacionado a Capital Humano, enviar el ticket correspondiente al área.'
     ],
     communicationRules: 'No contactar directamente a Dirección o Administración para estos temas operativos.',
-    closingCriteria: 'Ticket resuelto y comunicado al empleado vía sistema.',
+    closingCriteria: 'Ticket resuelto y comunicado al colaborador vía sistema.',
     recommendations: 'Mantener la comunicación mediante el sistema centralizado de tickets.'
   },
   {
@@ -403,18 +403,18 @@ export const protocolsData = [
     name: 'Emergencia o riesgo mayor',
     description: 'Actuación frente a asaltos, accidentes graves o desastres naturales.',
     trigger: 'Situación que ponga en riesgo la vida humana en la sucursal',
-    responsible: 'Todo el personal',
+    responsible: 'Todos los colaboradores',
     areas: ['Operaciones', 'Seguridad'],
     priority: 'Crítica',
     type: 'Seguridad',
     textSteps: [
-      'Paso 1: PRIMERO: Seguridad del personal. Llamar al 911. No arriesgar vidas por proteger producto.',
+      'Paso 1: PRIMERO: Seguridad de los colaboradores. Llamar al 911. No arriesgar vidas por proteger producto.',
       'Paso 2: Notificar al supervisor de inmediato. El supervisor notifica a la cadena de mando.',
       'Paso 3: Supervisor escala a Gerencia para toma de decisiones operativas inmediatas.',
       'Paso 4: Documentar todo al finalizar la emergencia: evidencia, reporte formal y acciones.'
     ],
     communicationRules: 'Llamar al 911 de inmediato y posteriormente al supervisor.',
-    closingCriteria: 'Personal a salvo, autoridades pertinentes a cargo y reporte de incidencias completado.',
+    closingCriteria: 'Colaboradores a salvo, autoridades pertinentes a cargo y reporte de incidencias completado.',
     recommendations: 'Mantener la calma, no oponer resistencia en asaltos y seguir indicaciones de autoridades.'
   },
   {
@@ -429,7 +429,7 @@ export const protocolsData = [
     type: 'Seguridad',
     textSteps: [
       'Paso 1: Mantener la calma y colgar la llamada inmediatamente sin dar información.',
-      'Paso 2: No proporcionar NUNCA información de la empresa, dueños, ganancias o personal.',
+      'Paso 2: No proporcionar NUNCA información de la empresa, dueños, ganancias o colaboradores.',
       'Paso 3: Notificar al supervisor de inmediato sobre la situación. Si la amenaza es física, contactar al 911.',
       'Paso 4: Registrar y documentar el número telefónico, fecha y hora del incidente.',
       'Paso 5: Supervisor escala el caso y alerta a las demás sucursales como prevención.'
@@ -493,12 +493,12 @@ export const protocolsData = [
     textSteps: [
       'Paso 1: Revisar la fecha de caducidad del pastel. Si le faltan 2 días o menos, avisar al supervisor.',
       'Paso 2: El supervisor confirma que se va a vender por rebanadas (porciones individuales).',
-      'Paso 3: Notificar al area o persona encargada de rebanar pasteles (puede ser otra tienda, obrador o personal autorizado). La tienda no hace el rebanado.',
+      'Paso 3: Notificar al area o persona encargada de rebanar pasteles (puede ser otra tienda, obrador o colaborador autorizado). La tienda no hace el rebanado.',
       'Paso 4: Una vez rebanado, cada porcion se empaca y etiqueta con precio, fecha de caducidad (la misma del pastel original) y el letrero "PORCION".',
       'Paso 5: Colocar las rebanadas en el refrigerador o vitrina en un lugar visible.',
       'Paso 6: Si sobran rebanadas al final del dia, avisar al supervisor para decidir si se promocionan o se desechan.'
     ],
-    communicationRules: 'Ningun empleado de la tienda debe rebanar el pastel si no esta autorizado. El rebanado lo hace personal especializado. Avisar al supervisor de cualquier sobrante.',
+    communicationRules: 'Ningun colaborador de la tienda debe rebanar el pastel si no esta autorizado. El rebanado lo hace colaboradores especializados. Avisar al supervisor de cualquier sobrante.',
     closingCriteria: 'Se venden todas las rebanadas o las sobrantes se promocionan o desechan con autorizacion.',
     recommendations: 'Calcular cuantas rebanadas salen de cada pastel para fijar un precio justo y revisar que todas esten bien etiquetadas.'
   },
@@ -525,20 +525,20 @@ export const protocolsData = [
     recommendations: 'Realizar conteos físicos 2 veces por semana y mantener stock de seguridad.'
   },
   {
-    id: 'ausencia_empleado',
+    id: 'ausencia_colaborador',
     code: 'P-02',
-    name: 'Ausencia de empleado en turno',
-    description: 'Protocolo cuando un empleado no se presenta en su sucursal durante su turno.',
-    trigger: 'Empleado no se presenta a la hora establecida sin notificación',
+    name: 'Ausencia de colaborador en turno',
+    description: 'Protocolo cuando un colaborador no se presenta en su sucursal durante su turno.',
+    trigger: 'Colaborador no se presenta a la hora establecida sin notificación',
     responsible: 'Supervisor de sucursal',
     areas: ['Administración/Recursos Humanos', 'Operaciones'],
     priority: 'Alta',
     type: 'Capital Humano',
     textSteps: [
       'Paso 1: Detectar ausencia en los primeros 5 minutos del turno.',
-      'Paso 2: Intentar contacto directo con el empleado (2 intentos en los primeros 10 min).',
+      'Paso 2: Intentar contacto directo con el colaborador (2 intentos en los primeros 10 min).',
       'Paso 3: Registrar la ausencia con hora y resultado del contacto.',
-      'Paso 4: Notificar a administración/RRHH detallando turno y empleado.',
+      'Paso 4: Notificar a administración/RRHH detallando turno y colaborador.',
       'Paso 5: Activar protocolo de reemplazo interno, externo o de operación reducida.',
       'Paso 6: Documentar cierre completando acta de ausencia P-02-F01 y enviar reporte.'
     ],
@@ -772,7 +772,7 @@ export const protocolsData = [
     name: 'Falla de celular',
     description: 'Resolver fallas básicas en dispositivo móvil de la tienda.',
     trigger: 'Celular de tienda no enciende, sin señal, sin internet o fallan apps',
-    responsible: 'Personal operativo',
+    responsible: 'Colaboradores operativos',
     areas: ['Soporte técnico', 'Operaciones'],
     priority: 'Media',
     type: 'Tecnología/Soporte',
@@ -1008,8 +1008,8 @@ export const protocolsData = [
     id: 'cliente_agresivo',
     code: 'C-03',
     name: 'Cliente con comportamiento agresivo',
-    description: 'Protocolo para proteger al personal y clientes frente a comportamientos agresivos dentro de la sucursal.',
-    trigger: 'Cliente eleva el tono, amenaza, insulta o representa riesgo para personal o clientes.',
+    description: 'Protocolo para proteger a los colaboradores y clientes frente a comportamientos agresivos dentro de la sucursal.',
+    trigger: 'Cliente eleva el tono, amenaza, insulta o representa riesgo para colaboradores o clientes.',
     responsible: 'Encargado de turno',
     areas: ['Supervisor de turno', 'Autoridades si aplica'],
     priority: 'Alta',
@@ -1018,12 +1018,12 @@ export const protocolsData = [
       'Paso 1 — Mantener la calma y no escalar: Hablar en tono bajo y tranquilo, evitando confrontación.',
       'Paso 2 — No ceder a presiones fuera de política: No ofrecer compensaciones no autorizadas.',
       'Paso 3 — Notificar al supervisor de inmediato: Describir la situación y nivel de agresividad.',
-      'Paso 4 — Resguardar al resto del personal y clientes: Mantener distancia y priorizar seguridad.',
+      'Paso 4 — Resguardar al resto de los colaboradores y clientes: Mantener distancia y priorizar seguridad.',
       'Paso 5 — Contactar al 911 si hay amenaza física: Llamar inmediatamente si hay riesgo real y notificar al supervisor.',
       'Paso 6 — Documentar el incidente: Registrar en F-01 con hora, descripción, acciones y resultado.'
     ],
     communicationRules: 'Nunca confrontar directamente al cliente agresivo. Priorizar la seguridad y documentar todo.',
-    closingCriteria: 'Situación controlada, cliente retirado o atendido, personal seguro e incidente documentado.',
+    closingCriteria: 'Situación controlada, cliente retirado o atendido, colaboradores seguros e incidente documentado.',
     recommendations: 'Si un cliente tiene episodios recurrentes, considerar restringir su acceso según decisión del supervisor.'
   },
   {

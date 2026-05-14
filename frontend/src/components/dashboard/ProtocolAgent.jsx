@@ -9,7 +9,7 @@ const DIRECT_HINTS = {
   retorno_insumos: ['retorno', 'devolucion cedis', 'devolver insumos'],
   producto_incidencia: ['producto danado', 'etiquetado', 'rechazo producto', 'f-04'],
   sistema: ['pos', 'app', 'sistema', 'no cobra', 'terminal'],
-  personal: ['falta personal', 'retardo', 'mala conducta', 'acta administrativa'],
+  personal: ['falta colaborador', 'retardo', 'mala conducta', 'acta administrativa'],
   ticket_rh: ['nomina', 'permisos', 'asistencias', 'prestamo', 'ticket rh'],
   apoyo_emocional: ['emocional', 'apoyo personal', 'crisis', 'estres', 'psicologo'],
   incumplimiento_protocolo: ['incumplimiento', 'no siguio protocolo', 'violacion proceso'],
