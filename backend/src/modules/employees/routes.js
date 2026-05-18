@@ -13,11 +13,11 @@ export const employeesRouter = Router();
 
 employeesRouter.use(authenticate);
 
-// ── Validar que un empleado existe (todos los roles, para el formulario de reportes)
+// ── Validar que un colaborador existe (todos los roles, para el formulario de reportes)
 employeesRouter.get('/validate/:code', async (req, res) => {
   const employee = await validateEmployeeExists(req.params.code);
   if (!employee) {
-    return res.status(404).json({ message: 'No se encontró un empleado activo con ese código' });
+    return res.status(404).json({ message: 'No se encontró un colaborador activo con ese código' });
   }
   return res.json(employee);
 });
@@ -29,14 +29,16 @@ employeesRouter.get('/', requireAnyRole('administrador', 'capital_humano'), asyn
 });
 
 const employeeSchema = z.object({
-  employeeCode: z.string().regex(/^EMP-\d{3,6}$/i, 'El código debe tener formato EMP-001').optional(),
+  // String vacío = auto-generar; solo valida formato si viene un valor real
+  employeeCode: z.preprocess(
+    (v) => (v === '' ? undefined : v),
+    z.string().regex(/^TB-[A-Z]{1,4}-\d{3,6}$/i, 'El código debe tener formato TB-XXX-001').optional()
+  ),
   fullName: z.string().min(3, 'El nombre completo debe tener al menos 3 caracteres').max(180, 'El nombre completo no puede exceder 180 caracteres'),
   email: z.string().email('Ingresa un correo válido').optional().nullable(),
   phone: z.string().regex(/^\d{10}$/, 'El teléfono debe contener exactamente 10 dígitos').optional().nullable(),
-  department: z.string().min(2, 'El departamento debe tener al menos 2 caracteres').max(120, 'El departamento no puede exceder 120 caracteres').optional().nullable(),
-  branch: z.string().min(2, 'La sucursal debe tener al menos 2 caracteres').max(120, 'La sucursal no puede exceder 120 caracteres').optional().nullable(),
   position: z.string().min(2, 'El puesto debe tener al menos 2 caracteres').max(120, 'El puesto no puede exceder 120 caracteres').optional().nullable(),
-  shift: z.string().min(2, 'El turno debe tener al menos 2 caracteres').max(80, 'El turno no puede exceder 80 caracteres').optional().nullable(),
+  hireDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Fecha inválida').optional().nullable(),
   isActive: z.boolean().optional(),
   notes: z.string().max(1000, 'Las notas no pueden exceder 1000 caracteres').optional().nullable(),
   userId: z.number().int().positive().optional().nullable(),

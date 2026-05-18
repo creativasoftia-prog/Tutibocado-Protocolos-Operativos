@@ -16,7 +16,7 @@ protocolIncidentsRouter.use(authenticate);
 const createSchema = z
   .object({
     protocolId: z.string().min(2, 'El protocolo es obligatorio'),
-    employeeCode: z.string().regex(/^EMP-\d{3,6}$/i, 'El código de empleado debe tener formato EMP-001'),
+    employeeCode: z.string().regex(/^TB-[A-Z]{1,4}-\d{3,6}$/i, 'El código de colaborador debe tener formato TB-XXX-001'),
     entryType: z.enum(['ejecucion', 'sugerencia']),
     followedAllSteps: z.boolean().optional(),
     wasHelpful: z.boolean().optional(),
@@ -70,7 +70,7 @@ protocolIncidentsRouter.post('/', async (req, res) => {
   const employee = await validateEmployeeExists(parsed.data.employeeCode);
   if (!employee) {
     return res.status(404).json({
-      message: 'No se encontró un empleado activo con ese código. Verifica tu número de empleado.',
+      message: 'No se encontró un colaborador activo con ese código. Verifica tu número de colaborador.',
     });
   }
 

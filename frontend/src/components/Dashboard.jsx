@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { SlidersHorizontal, ChevronDown } from 'lucide-react';
 import CategorySidebar from './dashboard/CategorySidebar';
 import ProtocolCardsGrid from './dashboard/ProtocolCardsGrid';
@@ -18,6 +18,15 @@ export default function Dashboard({ protocols, onSelect }) {
   });
 
   const categories = ['Todos', ...new Set(protocols.map((p) => p.type))];
+
+  const PAGE_SIZE = 12;
+  const [page, setPage] = useState(0);
+
+  // Resetear página al cambiar filtros
+  useEffect(() => { setPage(0); }, [searchTerm, activeFilter]);
+
+  const totalPages = Math.ceil(filteredProtocols.length / PAGE_SIZE);
+  const paginated = filteredProtocols.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
   return (
     <div className="w-full pl-3 pr-3 sm:pl-4 sm:pr-4 lg:pl-4 lg:pr-8 animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-5">
@@ -76,7 +85,32 @@ export default function Dashboard({ protocols, onSelect }) {
             )}
           </div>
 
-          <ProtocolCardsGrid protocols={filteredProtocols} onSelect={onSelect} />
+          <ProtocolCardsGrid protocols={paginated} onSelect={onSelect} />
+
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between pt-3 border-t border-cyan-100">
+              <button
+                type="button"
+                disabled={page === 0}
+                onClick={() => setPage((p) => p - 1)}
+                className="px-4 py-2 rounded-xl border border-cyan-200 text-sm font-semibold text-cyan-700 disabled:opacity-35 hover:bg-cyan-50 disabled:cursor-not-allowed transition-colors"
+              >
+                ← Anterior
+              </button>
+              <span className="text-xs text-slate-500">
+                Página {page + 1} de {totalPages}
+                <span className="hidden sm:inline"> · {filteredProtocols.length} protocolo{filteredProtocols.length !== 1 ? 's' : ''}</span>
+              </span>
+              <button
+                type="button"
+                disabled={(page + 1) >= totalPages}
+                onClick={() => setPage((p) => p + 1)}
+                className="px-4 py-2 rounded-xl border border-cyan-200 text-sm font-semibold text-cyan-700 disabled:opacity-35 hover:bg-cyan-50 disabled:cursor-not-allowed transition-colors"
+              >
+                Siguiente →
+              </button>
+            </div>
+          )}
         </section>
       </div>
     </div>

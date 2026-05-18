@@ -11,11 +11,14 @@ import {
   TrendingUp,
   UserCheck,
   AlertCircle,
+  Building2,
+  CalendarRange,
 } from 'lucide-react';
 import { api } from '../../api/client';
 import ReportCard from './ReportCard';
 import { EmptyState, Spinner, STATUS_CONFIG } from './shared';
 import { useToast } from '../../context/ToastContext';
+import DatePicker from '../DatePicker';
 import ProtocolIncidentsPanel from '../protocols/ProtocolIncidentsPanel';
 
 const PAGE_SIZE = 12;
@@ -34,6 +37,9 @@ export default function HRDashboard({ token }) {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(0);
   const [activeEmployee, setActiveEmployee] = useState(null);
+  const [filterBranch, setFilterBranch] = useState('');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
 
   const loadReports = useCallback(async () => {
     setLoading(true);
@@ -69,6 +75,11 @@ export default function HRDashboard({ token }) {
   const pendingCount   = reports.filter((r) => r.status === 'pendiente').length;
   const totalEmployees = new Set(reports.map((r) => r.employeeId)).size;
 
+  // ── Sucursales únicas (para el filtro) ─────────────────────────────────────
+  const uniqueBranches = Array.from(
+    new Set(reports.map((r) => r.employeeBranch).filter(Boolean))
+  ).sort();
+
   // ── Filtrado ────────────────────────────────────────────────────────────────
   const filtered = reports.filter((r) => {
     const matchStatus   = !filterStatus || r.status === filterStatus;
@@ -80,13 +91,17 @@ export default function HRDashboard({ token }) {
       r.reportNumber?.toLowerCase().includes(q) ||
       r.employeeBranch?.toLowerCase().includes(q);
     const matchEmployee = !activeEmployee || r.employeeId === activeEmployee;
-    return matchStatus && matchSearch && matchEmployee;
+    const matchBranch   = !filterBranch || r.employeeBranch === filterBranch;
+    const incDate       = r.incidentDate ? new Date(r.incidentDate + 'T00:00:00') : null;
+    const matchFrom     = !dateFrom || (incDate && incDate >= new Date(dateFrom + 'T00:00:00'));
+    const matchTo       = !dateTo   || (incDate && incDate <= new Date(dateTo   + 'T23:59:59'));
+    return matchStatus && matchSearch && matchEmployee && matchBranch && matchFrom && matchTo;
   });
 
   const paginated  = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
 
-  // ── Empleados únicos con conteos ────────────────────────────────────────────
+  // ── Colaboradores únicos con conteos ───────────────────────────────────────
   const employeesWithReports = Array.from(
     new Map(reports.map((r) => [r.employeeId, {
       id: r.employeeId, name: r.employeeName, code: r.employeeCode, branch: r.employeeBranch,
@@ -309,6 +324,43 @@ export default function HRDashboard({ token }) {
             </select>
           </div>
 
+          {/* Filtros de fecha y sucursal */}
+          <div className="flex flex-col sm:flex-row gap-2">
+            <div className="flex items-center gap-2 bg-white border border-cyan-200 rounded-xl px-3 py-2 focus-within:ring-2 focus-within:ring-cyan-400 focus-within:border-cyan-400 transition-colors shrink-0">
+              <CalendarRange size={14} className="text-cyan-500 shrink-0" />
+              <DatePicker
+                compact
+                label="Desde"
+                value={dateFrom}
+                onChange={(v) => { setDateFrom(v); setPage(0); }}
+                align="left"
+              />
+              <span className="text-cyan-200 select-none shrink-0">|</span>
+              <DatePicker
+                compact
+                label="Hasta"
+                value={dateTo}
+                onChange={(v) => { setDateTo(v); setPage(0); }}
+                align="right"
+              />
+            </div>
+            {uniqueBranches.length > 0 && (
+              <div className="flex items-center gap-2 bg-white border border-cyan-200 rounded-xl px-3 py-2">
+                <Building2 size={14} className="text-cyan-600 shrink-0" />
+                <select
+                  value={filterBranch}
+                  onChange={(e) => { setFilterBranch(e.target.value); setPage(0); }}
+                  className="text-sm border-none outline-none bg-transparent"
+                >
+                  <option value="">Todas las sucursales</option>
+                  {uniqueBranches.map((b) => (
+                    <option key={b} value={b}>{b}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
+
           {/* Contador de resultados */}
           {!loading && (
             <div className="flex items-center justify-between bg-white/60 border border-cyan-100 rounded-xl px-4 py-2.5">
@@ -317,9 +369,9 @@ export default function HRDashboard({ token }) {
                   ? `${reports.length} reporte${reports.length !== 1 ? 's' : ''}`
                   : `${filtered.length} de ${reports.length} reportes`}
               </span>
-              {(filterStatus || search || activeEmployee) && (
+              {(filterStatus || search || activeEmployee || filterBranch || dateFrom || dateTo) && (
                 <button
-                  onClick={() => { setFilterStatus(''); setSearch(''); setActiveEmployee(null); setPage(0); }}
+                  onClick={() => { setFilterStatus(''); setSearch(''); setActiveEmployee(null); setFilterBranch(''); setDateFrom(''); setDateTo(''); setPage(0); }}
                   className="text-xs text-cyan-600 hover:text-cyan-800 font-semibold underline"
                 >
                   Limpiar filtros

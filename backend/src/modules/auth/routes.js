@@ -52,7 +52,8 @@ const createUserSchema = z.object({
   fullName: z.string().min(3, 'El nombre completo debe tener al menos 3 caracteres'),
   email: z.string().email('Ingresa un correo válido'),
   password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres'),
-  roleNames: z.array(z.string().min(2)).min(1, 'Debes seleccionar al menos un rol')
+  roleNames: z.array(z.string().min(2)).min(1, 'Debes seleccionar al menos un rol'),
+  branchName: z.string().min(2, 'El nombre de sucursal debe tener al menos 2 caracteres').max(120).optional().nullable()
 });
 
 authRouter.post('/users', authenticate, requireAnyRole('administrador'), async (req, res) => {
@@ -75,7 +76,8 @@ const updateUserSchema = z.object({
   email: z.string().email('Ingresa un correo válido'),
   password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres').optional().or(z.literal('')),
   roleNames: z.array(z.string().min(2)).min(1, 'Debes seleccionar al menos un rol'),
-  isActive: z.boolean().default(true)
+  isActive: z.boolean().default(true),
+  branchName: z.string().min(2, 'El nombre de sucursal debe tener al menos 2 caracteres').max(120).optional().nullable()
 });
 
 authRouter.put('/users/:userId', authenticate, requireAnyRole('administrador'), async (req, res) => {

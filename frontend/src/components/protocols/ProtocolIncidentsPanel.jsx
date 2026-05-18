@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { AlertTriangle, CheckCircle2, ClipboardList, Lightbulb, RefreshCcw, Search, ShieldCheck } from 'lucide-react';
+import { AlertTriangle, Building2, CalendarRange, CheckCircle2, ClipboardList, Lightbulb, RefreshCcw, Search, ShieldCheck } from 'lucide-react';
 import { api } from '../../api/client';
+import DatePicker from '../DatePicker';
 
 const PAGE_SIZE = 8;
 
@@ -36,6 +37,9 @@ export default function ProtocolIncidentsPanel({ token }) {
   const [typeFilter, setTypeFilter] = useState('');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(0);
+  const [branchFilter, setBranchFilter] = useState('');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -59,11 +63,22 @@ export default function ProtocolIncidentsPanel({ token }) {
     });
   }, [loadData]);
 
+  const uniqueBranches = useMemo(
+    () => Array.from(new Set(incidents.map((i) => i.employeeBranch).filter(Boolean))).sort(),
+    [incidents]
+  );
+
   const filtered = useMemo(() => {
     const query = search.trim().toLowerCase();
     return incidents.filter((item) => {
       const statusMatch = !statusFilter || item.status === statusFilter;
       const typeMatch = !typeFilter || item.entryType === typeFilter;
+      const branchMatch = !branchFilter || item.employeeBranch === branchFilter;
+      const createdDate = item.createdAt ? new Date(item.createdAt) : null;
+      const fromDate = dateFrom ? new Date(dateFrom + 'T00:00:00') : null;
+      const toDate = dateTo ? new Date(dateTo + 'T23:59:59') : null;
+      const dateMatch = (!fromDate || (createdDate && createdDate >= fromDate)) &&
+                        (!toDate   || (createdDate && createdDate <= toDate));
       const searchMatch =
         !query ||
         item.incidentNumber?.toLowerCase().includes(query) ||
@@ -71,12 +86,13 @@ export default function ProtocolIncidentsPanel({ token }) {
         item.protocolName?.toLowerCase().includes(query) ||
         item.employeeCode?.toLowerCase().includes(query) ||
         item.employeeName?.toLowerCase().includes(query) ||
+        item.employeeBranch?.toLowerCase().includes(query) ||
         item.documentation?.toLowerCase().includes(query) ||
         item.suggestion?.toLowerCase().includes(query);
 
-      return statusMatch && typeMatch && searchMatch;
+      return statusMatch && typeMatch && branchMatch && dateMatch && searchMatch;
     });
-  }, [incidents, search, statusFilter, typeFilter]);
+  }, [incidents, search, statusFilter, typeFilter, branchFilter, dateFrom, dateTo]);
 
   const chartData = useMemo(() => {
     const rows = (summary?.byProtocol || []).slice(0, 6);
@@ -89,7 +105,7 @@ export default function ProtocolIncidentsPanel({ token }) {
 
   useEffect(() => {
     setPage(0);
-  }, [search, statusFilter, typeFilter]);
+  }, [search, statusFilter, typeFilter, branchFilter, dateFrom, dateTo]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const paginated = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
@@ -169,12 +185,52 @@ export default function ProtocolIncidentsPanel({ token }) {
             <option value="revisado">Revisado</option>
             <option value="resuelto">Resuelto</option>
           </select>
-          {(statusFilter || typeFilter || search) ? (
+
+          {/* Filtro por sucursal */}
+          {uniqueBranches.length > 0 && (
+            <div className="flex items-center gap-2 bg-white border border-cyan-200 rounded-lg px-2.5 py-1">
+              <Building2 size={13} className="text-cyan-600 shrink-0" />
+              <select
+                value={branchFilter}
+                onChange={(e) => setBranchFilter(e.target.value)}
+                className="flex-1 text-sm border-none outline-none bg-transparent py-1.5"
+              >
+                <option value="">Todas las sucursales</option>
+                {uniqueBranches.map((b) => (
+                  <option key={b} value={b}>{b}</option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {/* Filtro por rango de fechas */}
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-cyan-700">
+              <CalendarRange size={13} /> Rango de fechas
+            </div>
+            <DatePicker
+              label="Desde"
+              value={dateFrom}
+              onChange={(v) => setDateFrom(v)}
+              placeholder="Desde"
+            />
+            <DatePicker
+              label="Hasta"
+              value={dateTo}
+              onChange={(v) => setDateTo(v)}
+              placeholder="Hasta"
+            />
+          </div>
+
+          {(statusFilter || typeFilter || branchFilter || dateFrom || dateTo || search) ? (
             <button
               type="button"
               onClick={() => {
                 setStatusFilter('');
                 setTypeFilter('');
+                setBranchFilter('');
+                setDateFrom('');
+                setDateTo('');
                 setSearch('');
               }}
               className="w-full px-3 py-2 rounded-lg border border-cyan-200 text-cyan-700 text-sm font-semibold hover:bg-cyan-100"

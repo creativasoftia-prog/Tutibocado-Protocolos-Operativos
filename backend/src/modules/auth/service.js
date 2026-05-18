@@ -15,7 +15,7 @@ const getRolesByUserId = async (userId) => {
 export const getUserProfile = async (userId) => {
   const user = await db('users')
     .where({ id: userId })
-    .first('id', 'full_name as fullName', 'email', 'is_active as isActive', 'created_at as createdAt');
+    .first('id', 'full_name as fullName', 'email', 'is_active as isActive', 'branch_name as branchName', 'created_at as createdAt');
 
   if (!user) return null;
 
@@ -60,7 +60,7 @@ export const loginWithEmailPassword = async ({ email, password }) => {
 
 export const listUsersWithRoles = async () => {
   const users = await db('users')
-    .select('id', 'full_name as fullName', 'email', 'is_active as isActive', 'created_at as createdAt')
+    .select('id', 'full_name as fullName', 'email', 'is_active as isActive', 'branch_name as branchName', 'created_at as createdAt')
     .orderBy('full_name', 'asc');
 
   const usersWithRoles = await Promise.all(
@@ -73,7 +73,7 @@ export const listUsersWithRoles = async () => {
   return usersWithRoles;
 };
 
-export const createUserWithRoles = async ({ fullName, email, password, roleNames }) => {
+export const createUserWithRoles = async ({ fullName, email, password, roleNames, branchName }) => {
   const normalizedEmail = email.trim().toLowerCase();
 
   return db.transaction(async (trx) => {
@@ -89,9 +89,10 @@ export const createUserWithRoles = async ({ fullName, email, password, roleNames
         full_name: fullName.trim(),
         email: normalizedEmail,
         password_hash: passwordHash,
-        is_active: true
+        is_active: true,
+        branch_name: branchName?.trim() || null
       })
-      .returning(['id', 'full_name as fullName', 'email']);
+      .returning(['id', 'full_name as fullName', 'email', 'branch_name as branchName']);
 
     const normalizedRoleNames = roleNames.map(name => name.trim().toLowerCase());
     const roles = await trx('roles').whereIn('name', normalizedRoleNames).select('id', 'name');
@@ -111,7 +112,7 @@ export const createUserWithRoles = async ({ fullName, email, password, roleNames
   });
 };
 
-export const updateUserWithRoles = async ({ userId, fullName, email, password, roleNames, isActive }) => {
+export const updateUserWithRoles = async ({ userId, fullName, email, password, roleNames, isActive, branchName }) => {
   const normalizedEmail = email.trim().toLowerCase();
 
   return db.transaction(async (trx) => {
@@ -132,7 +133,8 @@ export const updateUserWithRoles = async ({ userId, fullName, email, password, r
     const updatePayload = {
       full_name: fullName.trim(),
       email: normalizedEmail,
-      is_active: isActive
+      is_active: isActive,
+      branch_name: branchName?.trim() || null
     };
 
     if (password && password.trim().length > 0) {
@@ -153,7 +155,7 @@ export const updateUserWithRoles = async ({ userId, fullName, email, password, r
 
     const [updated] = await trx('users')
       .where({ id: userId })
-      .select('id', 'full_name as fullName', 'email', 'is_active as isActive');
+      .select('id', 'full_name as fullName', 'email', 'is_active as isActive', 'branch_name as branchName');
 
     return {
       ...updated,

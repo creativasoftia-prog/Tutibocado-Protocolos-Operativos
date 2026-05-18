@@ -89,3 +89,19 @@
 .toast-exit {
   animation: toastOut 0.2s ease-in forwards;
 }
+
+/* ── Date inputs — coherencia con el design system ───────────────── */
+input[type="date"] {
+  color-scheme: light;
+  accent-color: var(--color-primary);
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  opacity: 0.45;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 0.85;
+}

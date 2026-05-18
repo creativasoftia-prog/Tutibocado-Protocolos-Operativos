@@ -145,12 +145,27 @@ rolesRouter.delete('/:roleName', requireAnyRole('administrador'), async (req, re
     return res.status(404).json({ message: 'Rol no encontrado' });
   }
 
-  const [assignedUsers] = await db('user_roles').where({ role_id: role.id }).count('user_id as count');
-  if (Number(assignedUsers?.count || 0) > 0) {
-    return res.status(409).json({ message: 'No se puede eliminar el rol porque tiene cuentas asignadas' });
+  const [assignedUsers, linkedCategories, linkedProtocols] = await Promise.all([
+    db('user_roles').where({ role_id: role.id }).count('user_id as count').first(),
+    db('role_category_visibility').where({ role_id: role.id }).count('protocol_type_id as count').first(),
+    db('protocol_visibility_roles').where({ role_id: role.id }).count('protocol_id as count').first(),
+  ]);
+
+  const usersCount = Number(assignedUsers?.count || 0);
+  const categoriesCount = Number(linkedCategories?.count || 0);
+  const protocolsCount = Number(linkedProtocols?.count || 0);
+
+  if (usersCount > 0 || categoriesCount > 0 || protocolsCount > 0) {
+    return res.status(409).json({
+      message: 'No se puede eliminar el rol porque no está vacío',
+      details: {
+        usersCount,
+        categoriesCount,
+        protocolsCount,
+      },
+    });
   }
 
-  // Nota: Al eliminar el rol, las tablas de visibilidad se limpian por ON DELETE CASCADE
   await db('roles').where({ id: role.id }).del();
   return res.json({ deleted: true });
 });
