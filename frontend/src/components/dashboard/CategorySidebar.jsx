@@ -54,7 +54,7 @@ export default function CategorySidebar({
   return (
     <aside
       className={`bg-white/90 border border-cyan-100 rounded-2xl p-4 shadow-sm ${
-        sticky ? 'lg:sticky lg:top-24 lg:max-h-[calc(100vh-8rem)] lg:overflow-hidden' : ''
+        sticky ? 'lg:sticky lg:top-24' : ''
       } ${className}`}
     >
       {/* Buscador */}
@@ -76,7 +76,9 @@ export default function CategorySidebar({
         <span className="text-sm font-semibold text-cyan-800">Categorías</span>
       </div>
 
-      <div className={`space-y-2 pr-1 ${sticky ? 'lg:max-h-[calc(100vh-13rem)] lg:overflow-y-auto' : 'max-h-80 overflow-y-auto'}`}>
+      <div className={`space-y-2 pr-1 overflow-y-auto ${
+        sticky ? 'lg:max-h-[calc(100vh-16rem)]' : 'max-h-64'
+      }`}>
         {categories.map((cat) => {
           const isActive = activeFilter === cat;
 

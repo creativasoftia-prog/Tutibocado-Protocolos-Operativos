@@ -4,7 +4,7 @@ import SvgDiagram from './SvgDiagram';
 import { toPng } from 'html-to-image';
 import { jsPDF } from 'jspdf';
 
-const EMPLOYEE_CODE_REGEX = /^EMP-\d{3,6}$/i;
+const EMPLOYEE_CODE_REGEX = /^TB-[A-Z]{1,4}-\d{3,6}$/i;
 
 export default function ProtocolDetail({ protocol, onBack, onCreateProtocolIncident }) {
   const [viewMode, setViewMode] = React.useState('text'); // 'text' | 'diagram'
@@ -94,7 +94,7 @@ export default function ProtocolDetail({ protocol, onBack, onCreateProtocolIncid
 
     const employeeCode = incidentForm.employeeCode.trim().toUpperCase();
     if (!EMPLOYEE_CODE_REGEX.test(employeeCode)) {
-      setIncidentError('El código de colaborador debe tener formato EMP-001.');
+      setIncidentError('El código de colaborador debe tener formato TB-XXX-001.');
       return;
     }
 
@@ -247,7 +247,7 @@ export default function ProtocolDetail({ protocol, onBack, onCreateProtocolIncid
                     required
                     value={incidentForm.employeeCode}
                     onChange={(e) => setIncidentForm((prev) => ({ ...prev, employeeCode: e.target.value.toUpperCase() }))}
-                    placeholder="EMP-001"
+                    placeholder="TB-ABC-001"
                     className="w-full px-3 py-2.5 border border-cyan-200 rounded-lg text-sm"
                   />
                 </label>

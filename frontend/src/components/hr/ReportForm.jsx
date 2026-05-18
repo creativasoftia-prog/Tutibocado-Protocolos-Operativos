@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { api } from '../../api/client';
 import { FieldError, Spinner, TypeBadge } from './shared';
+import DatePicker from '../DatePicker';
 
 const REPORT_TYPES = [
   { value: 'falta', label: 'Falta / Ausencia' },
@@ -51,8 +52,8 @@ export default function ReportForm({ token, onSuccess, onCancel }) {
       return;
     }
 
-    if (!/^EMP-\d{3,6}$/.test(normalizedCode)) {
-      setErrors((prev) => ({ ...prev, employeeCode: 'El código debe tener formato EMP-001' }));
+    if (!/^TB-[A-Z]{1,4}-\d{3,6}$/i.test(normalizedCode)) {
+      setErrors((prev) => ({ ...prev, employeeCode: 'El código debe tener formato TB-XXX-001' }));
       return;
     }
 
@@ -143,7 +144,7 @@ export default function ReportForm({ token, onSuccess, onCancel }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
-      {/* Verificación de empleado */}
+      {/* Verificación de colaborador */}
       <div className="bg-cyan-50 border border-cyan-200 rounded-xl p-4 space-y-3">
         <p className="text-sm font-semibold text-cyan-800 flex items-center gap-1.5">
           <User size={15} /> Verificación de identidad
@@ -157,9 +158,9 @@ export default function ReportForm({ token, onSuccess, onCancel }) {
               type="text"
               value={form.employeeCode}
               onChange={(e) => { setField('employeeCode', e.target.value.toUpperCase()); setValidatedEmployee(null); }}
-              placeholder="Ej. EMP-001"
-              pattern="EMP-[0-9]{3,6}"
-              maxLength={10}
+              placeholder="Ej. TB-ABC-001"
+              pattern="TB-[A-Za-z]{1,4}-[0-9]{3,6}"
+              maxLength={15}
               className="w-full px-3 py-2.5 border border-cyan-200 rounded-xl text-sm focus:ring-2 focus:ring-cyan-500 focus:outline-none"
             />
             <FieldError message={errors.employeeCode} />
@@ -220,12 +221,10 @@ export default function ReportForm({ token, onSuccess, onCancel }) {
       {/* Fecha del incidente */}
       <div className="space-y-1">
         <label className="text-xs font-semibold uppercase tracking-wide text-cyan-800">Fecha del incidente / ausencia</label>
-        <input
-          type="date"
-          max={today}
+        <DatePicker
           value={form.incidentDate}
-          onChange={(e) => setField('incidentDate', e.target.value)}
-          className="w-full px-3 py-2.5 border border-cyan-200 rounded-xl text-sm focus:ring-2 focus:ring-cyan-500 focus:outline-none"
+          onChange={(v) => setField('incidentDate', v || new Date().toISOString().slice(0, 10))}
+          max={today}
         />
         <FieldError message={errors.incidentDate} />
       </div>

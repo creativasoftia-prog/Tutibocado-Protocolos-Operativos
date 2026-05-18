@@ -1,4 +1,5 @@
 import { db, isPostgresClient } from '../../config/db.js';
+import { createNotificationsForEntry } from '../notifications/service.js';
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -90,13 +91,13 @@ export const getReportById = async (id) => {
 };
 
 export const createReport = async (payload) => {
-  // Validar que el empleado existe y está activo
+  // Validar que el colaborador existe y está activo
   const employee = await db('employees')
     .where({ id: payload.employeeId, is_active: true })
     .first();
 
   if (!employee) {
-    throw new Error('El empleado no existe o no está activo en el sistema');
+    throw new Error('El colaborador no existe o no está activo en el sistema');
   }
 
   const reportNumber = await generateReportNumber();
@@ -118,7 +119,18 @@ export const createReport = async (payload) => {
     throw new Error('No se pudo obtener el id del reporte recién creado');
   }
 
-  return getReportById(id);
+  const report = await getReportById(id);
+
+  // Notificar a administradores, capital humano y supervisores (fire-and-forget)
+  createNotificationsForEntry({
+    type: 'reporte',
+    title: `Nuevo reporte: ${payload.subject.trim()}`,
+    body: `${report.employeeName || 'Colaborador'} · ${report.type}`,
+    entityType: 'hr_report',
+    entityId: id,
+  }).catch(() => {});
+
+  return report;
 };
 
 export const updateReportStatus = async (id, payload, reviewerUserId) => {
@@ -132,6 +144,13 @@ export const updateReportStatus = async (id, payload, reviewerUserId) => {
     reviewed_at: db.fn.now(),
     updated_at: db.fn.now(),
   });
+
+  // Cuando el reporte es revisado/aceptado/rechazado, marcar sus notificaciones como leídas
+  if (['revisado', 'aceptado', 'rechazado'].includes(payload.status)) {
+    await db('notifications')
+      .where({ entity_type: 'hr_report', entity_id: id, is_read: false })
+      .update({ is_read: true });
+  }
 
   return getReportById(id);
 };

@@ -25,7 +25,7 @@ hrReportsRouter.get('/', requireAnyRole('administrador', 'capital_humano'), asyn
   return res.json(reports);
 });
 
-// ── Listar por empleado (propio — cualquier rol autenticado)
+// ── Listar por colaborador (propio — cualquier rol autenticado)
 hrReportsRouter.get('/employee/:employeeId', async (req, res) => {
   const employeeId = parseInt(req.params.employeeId, 10);
   if (!employeeId) return res.status(400).json({ message: 'ID inválido' });
@@ -43,7 +43,7 @@ hrReportsRouter.get('/:id', async (req, res) => {
 });
 
 const createReportSchema = z.object({
-  employeeCode: z.string().regex(/^EMP-\d{3,6}$/i, 'El código de empleado debe tener formato EMP-001'),
+  employeeCode: z.string().regex(/^TB-[A-Z]{1,4}-\d{3,6}$/i, 'El código de colaborador debe tener formato TB-XXX-001'),
   type: z.enum(['falta', 'enfermedad', 'situacion', 'permiso', 'otro'], { message: 'Selecciona un tipo de reporte válido' }),
   subject: z.string().min(5, 'El asunto debe tener al menos 5 caracteres').max(220, 'El asunto no puede exceder 220 caracteres'),
   description: z.string().min(10, 'La descripción debe tener al menos 10 caracteres'),
@@ -53,7 +53,7 @@ const createReportSchema = z.object({
   path: ['incidentDate']
 });
 
-// ── Crear reporte (todos los roles — valida el empleado por código)
+// ── Crear reporte (todos los roles — valida el colaborador por código)
 hrReportsRouter.post('/', async (req, res) => {
   const parsed = createReportSchema.safeParse(req.body);
   if (!parsed.success) {
@@ -63,7 +63,7 @@ hrReportsRouter.post('/', async (req, res) => {
   const employee = await validateEmployeeExists(parsed.data.employeeCode);
   if (!employee) {
     return res.status(404).json({
-      message: 'No se encontró un empleado activo con ese código. Verifica tu número de empleado.',
+      message: 'No se encontró un colaborador activo con ese código. Verifica tu número de colaborador.',
     });
   }
 

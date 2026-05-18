@@ -8,10 +8,8 @@ const mapRow = (row) => ({
   fullName: row.full_name,
   email: row.email || null,
   phone: row.phone || null,
-  department: row.department || null,
-  branch: row.branch || null,
   position: row.position || null,
-  shift: row.shift || null,
+  hireDate: row.hire_date || null,
   isActive: row.is_active,
   notes: row.notes || null,
   userId: row.user_id || null,
@@ -19,10 +17,22 @@ const mapRow = (row) => ({
   updatedAt: row.updated_at,
 });
 
-const generateCode = async () => {
+// Extrae hasta 3 iniciales del nombre completo (primera letra de cada palabra)
+const getInitials = (fullName) => {
+  return fullName
+    .trim()
+    .split(/\s+/)
+    .slice(0, 3)
+    .map((w) => w[0]?.toUpperCase() ?? '')
+    .join('');
+};
+
+// Genera TB-{INICIALES}-{SEQ} — único por número secuencial global
+const generateCode = async (fullName) => {
+  const initials = getInitials(fullName);
   const last = await db('employees').max('id as maxId').first();
   const next = (last?.maxId || 0) + 1;
-  return `EMP-${String(next).padStart(3, '0')}`;
+  return `TB-${initials}-${String(next).padStart(3, '0')}`;
 };
 
 // ── exports ───────────────────────────────────────────────────────────────────
@@ -45,16 +55,16 @@ export const findEmployeeByCode = async (code) => {
 };
 
 export const createEmployee = async (payload) => {
-  const code = payload.employeeCode?.trim() || (await generateCode());
+  const code = payload.employeeCode?.trim() || (await generateCode(payload.fullName));
   const normalizedEmail = payload.email?.trim().toLowerCase() || null;
 
   const existing = await db('employees').where({ employee_code: code }).first();
-  if (existing) throw new Error(`Ya existe un empleado con el código ${code}`);
+  if (existing) throw new Error(`Ya existe un colaborador con el código ${code}`);
 
   if (normalizedEmail) {
     const existingEmail = await db('employees').whereRaw('LOWER(email) = ?', [normalizedEmail]).first('id');
     if (existingEmail) {
-      throw new Error('Ya existe un empleado con ese correo electrónico');
+      throw new Error('Ya existe un colaborador con ese correo electrónico');
     }
   }
 
@@ -63,10 +73,8 @@ export const createEmployee = async (payload) => {
     full_name: payload.fullName.trim(),
     email: normalizedEmail,
     phone: payload.phone?.trim() || null,
-    department: payload.department?.trim() || null,
-    branch: payload.branch?.trim() || null,
     position: payload.position?.trim() || null,
-    shift: payload.shift?.trim() || null,
+    hire_date: payload.hireDate || null,
     is_active: payload.isActive !== false,
     notes: payload.notes?.trim() || null,
     user_id: payload.userId || null,
@@ -79,7 +87,7 @@ export const createEmployee = async (payload) => {
 
 export const updateEmployee = async (id, payload) => {
   const existing = await db('employees').where({ id }).first();
-  if (!existing) throw new Error('Empleado no encontrado');
+  if (!existing) throw new Error('Colaborador no encontrado');
 
   if (payload.email !== undefined && payload.email) {
     const normalizedEmail = payload.email.trim().toLowerCase();
@@ -89,7 +97,7 @@ export const updateEmployee = async (id, payload) => {
       .first('id');
 
     if (emailOwner) {
-      throw new Error('Ya existe un empleado con ese correo electrónico');
+      throw new Error('Ya existe un colaborador con ese correo electrónico');
     }
   }
 
@@ -100,10 +108,8 @@ export const updateEmployee = async (id, payload) => {
   if (payload.fullName !== undefined) updates.full_name = payload.fullName.trim();
   if (payload.email !== undefined) updates.email = payload.email?.trim() || null;
   if (payload.phone !== undefined) updates.phone = payload.phone?.trim() || null;
-  if (payload.department !== undefined) updates.department = payload.department?.trim() || null;
-  if (payload.branch !== undefined) updates.branch = payload.branch?.trim() || null;
   if (payload.position !== undefined) updates.position = payload.position?.trim() || null;
-  if (payload.shift !== undefined) updates.shift = payload.shift?.trim() || null;
+  if (payload.hireDate !== undefined) updates.hire_date = payload.hireDate || null;
   if (payload.isActive !== undefined) updates.is_active = payload.isActive;
   if (payload.notes !== undefined) updates.notes = payload.notes?.trim() || null;
   if (payload.userId !== undefined) updates.user_id = payload.userId || null;
@@ -114,7 +120,7 @@ export const updateEmployee = async (id, payload) => {
 
 export const deleteEmployee = async (id) => {
   const existing = await db('employees').where({ id }).first();
-  if (!existing) throw new Error('Empleado no encontrado');
+  if (!existing) throw new Error('Colaborador no encontrado');
   await db('employees').where({ id }).delete();
 };
 

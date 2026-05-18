@@ -1,4 +1,5 @@
 import { db, isPostgresClient } from '../../config/db.js';
+import { createNotificationsForEntry } from '../notifications/service.js';
 
 const mapRow = (row) => ({
   id: row.id,
@@ -9,6 +10,7 @@ const mapRow = (row) => ({
   employeeId: row.employee_id,
   employeeCode: row.employee_code,
   employeeName: row.employee_name,
+  employeeBranch: row.employee_branch || null,
   entryType: row.entry_type,
   followedAllSteps: row.followed_all_steps,
   wasHelpful: row.was_helpful,
@@ -54,7 +56,8 @@ const baseSelect = () =>
       'p.code as protocol_code',
       'p.name as protocol_name',
       'e.employee_code as employee_code',
-      'e.full_name as employee_name'
+      'e.full_name as employee_name',
+      'e.branch as employee_branch'
     );
 
 export const createProtocolIncident = async ({
@@ -91,7 +94,22 @@ export const createProtocolIncident = async ({
   }
 
   const created = await baseSelect().where('pi.id', id).first();
-  return mapRow(created);
+  const result = mapRow(created);
+
+  // Notificar a administradores, capital humano y supervisores (fire-and-forget)
+  const notifType = entryType === 'sugerencia' ? 'sugerencia' : 'documentacion';
+  const notifTitle = entryType === 'sugerencia'
+    ? `Nueva sugerencia: ${result.protocolName || protocolSlug}`
+    : `Nueva documentación: ${result.protocolName || protocolSlug}`;
+  createNotificationsForEntry({
+    type: notifType,
+    title: notifTitle,
+    body: result.employeeName || result.employeeCode || 'Colaborador',
+    entityType: 'protocol_incident',
+    entityId: id,
+  }).catch(() => {});
+
+  return result;
 };
 
 export const listProtocolIncidents = async ({ status, entryType, protocolId, employeeId } = {}) => {

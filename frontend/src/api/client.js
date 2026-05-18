@@ -43,7 +43,7 @@ export const api = {
   updateCategory: (token, categoryId, payload) => request(`/protocols/categories/${categoryId}`, { method: 'PUT', token, body: payload }),
   deleteCategory: (token, categoryId) => request(`/protocols/categories/${categoryId}`, { method: 'DELETE', token }),
 
-  // ── Empleados ──────────────────────────────────────────────────────────────
+  // ── Colaboradores ─────────────────────────────────────────────────────────
   listEmployees: (token) => request('/employees', { token }),
   createEmployee: (token, payload) => request('/employees', { method: 'POST', token, body: payload }),
   updateEmployee: (token, employeeId, payload) => request(`/employees/${employeeId}`, { method: 'PUT', token, body: payload }),
@@ -76,4 +76,10 @@ export const api = {
   },
   getProtocolIncidentsSummary: (token) => request('/protocol-incidents/summary', { token }),
   updateProtocolIncidentStatus: (token, id, payload) => request(`/protocol-incidents/${id}/status`, { method: 'PATCH', token, body: payload }),
+
+  // ── Notificaciones ─────────────────────────────────────────────────────────
+  listNotifications: (token) => request('/notifications', { token }),
+  getUnreadCount: (token) => request('/notifications/unread-count', { token }),
+  markNotificationRead: (token, id) => request(`/notifications/${id}/read`, { method: 'PATCH', token }),
+  markAllNotificationsRead: (token) => request('/notifications/read-all', { method: 'PATCH', token }),
 };

@@ -59,6 +59,7 @@ import {
   Battery,
 } from 'lucide-react';
 import ProtocolIncidentsPanel from './protocols/ProtocolIncidentsPanel';
+import DatePicker from './DatePicker';
 
 // ── Iconos disponibles para elegir ────────────────────────────────────────────
 const ICON_OPTIONS = [
@@ -266,7 +267,8 @@ const emptyUser = {
   email: '',
   password: '',
   roleNames: ['sucursal'],
-  isActive: true
+  isActive: true,
+  branchName: ''
 };
 
 const emptyCategory = { name: '' };
@@ -276,10 +278,8 @@ const emptyEmployee = {
   fullName: '',
   email: '',
   phone: '',
-  department: '',
-  branch: '',
   position: '',
-  shift: '',
+  hireDate: '',
   isActive: true,
   notes: '',
 };
@@ -458,10 +458,8 @@ export default function AdminPanel({
       fullName: emp.fullName || '',
       email: emp.email || '',
       phone: emp.phone || '',
-      department: emp.department || '',
-      branch: emp.branch || '',
       position: emp.position || '',
-      shift: emp.shift || '',
+      hireDate: emp.hireDate || '',
       isActive: emp.isActive !== false,
       notes: emp.notes || '',
     });
@@ -496,10 +494,8 @@ export default function AdminPanel({
       fullName: employeeForm.fullName.trim(),
       email: normalizedEmail || null,
       phone: normalizedPhone || null,
-      department: employeeForm.department || null,
-      branch: employeeForm.branch || null,
       position: employeeForm.position || null,
-      shift: employeeForm.shift || null,
+      hireDate: employeeForm.hireDate || null,
       notes: employeeForm.notes || null,
     };
     if (editingEmployeeId) {
@@ -561,6 +557,16 @@ export default function AdminPanel({
   };
 
   const removeRole = async (role) => {
+    const assignedUsersCount = users.filter((user) => user.roles?.includes(role.name)).length;
+    const categoriesCount = role.permissions?.categoryIds?.length || 0;
+    const protocolsCount = role.permissions?.protocolIds?.length || 0;
+    const isEmptyRole = assignedUsersCount === 0 && categoriesCount === 0 && protocolsCount === 0;
+
+    if (!isEmptyRole) {
+      window.alert('Solo se pueden eliminar roles vacíos (sin usuarios ni permisos asignados).');
+      return;
+    }
+
     const approved = window.confirm(`¿Eliminar rol ${role.name}?`);
     if (!approved) return;
     await onDeleteRole(role.name);
@@ -715,7 +721,8 @@ export default function AdminPanel({
       email: user.email,
       password: '',
       roleNames: user.roles?.length ? user.roles : ['sucursal'],
-      isActive: Boolean(user.isActive)
+      isActive: Boolean(user.isActive),
+      branchName: user.branchName || ''
     });
     setActiveSection('users');
   };
@@ -992,14 +999,49 @@ export default function AdminPanel({
                         <div>
                           <p className="font-semibold">{role.name}</p>
                           <p className="text-xs text-cyan-700">{role.description || 'Sin descripción'}</p>
+                          {(() => {
+                            const assignedUsersCount = users.filter((user) => user.roles?.includes(role.name)).length;
+                            const categoriesCount = role.permissions?.categoryIds?.length || 0;
+                            const protocolsCount = role.permissions?.protocolIds?.length || 0;
+                            const isEmptyRole = assignedUsersCount === 0 && categoriesCount === 0 && protocolsCount === 0;
+
+                            if (isEmptyRole) {
+                              return <p className="text-[11px] text-emerald-700 mt-1">Rol vacío. Se puede eliminar.</p>;
+                            }
+
+                            return (
+                              <p className="text-[11px] text-amber-700 mt-1">
+                                No vacío: usuarios {assignedUsersCount}, categorías {categoriesCount}, protocolos {protocolsCount}
+                              </p>
+                            );
+                          })()}
                         </div>
                         <div className="flex items-center gap-2">
                           <button type="button" onClick={() => startEditRole(role)} className="inline-flex items-center gap-1 text-xs font-semibold text-cyan-700 hover:text-cyan-900">
                             <Pencil size={13} /> Editar
                           </button>
-                          <button type="button" onClick={() => removeRole(role)} className="inline-flex items-center gap-1 text-xs font-semibold text-rose-700 hover:text-rose-900">
-                            <Trash2 size={13} /> Eliminar
-                          </button>
+                          {(() => {
+                            const assignedUsersCount = users.filter((user) => user.roles?.includes(role.name)).length;
+                            const categoriesCount = role.permissions?.categoryIds?.length || 0;
+                            const protocolsCount = role.permissions?.protocolIds?.length || 0;
+                            const canDelete = assignedUsersCount === 0 && categoriesCount === 0 && protocolsCount === 0;
+
+                            return (
+                              <button
+                                type="button"
+                                onClick={() => removeRole(role)}
+                                disabled={!canDelete}
+                                title={canDelete ? 'Eliminar rol' : 'Solo se pueden eliminar roles vacíos'}
+                                className={`inline-flex items-center gap-1 text-xs font-semibold ${
+                                  canDelete
+                                    ? 'text-rose-700 hover:text-rose-900'
+                                    : 'text-slate-400 cursor-not-allowed'
+                                }`}
+                              >
+                                <Trash2 size={13} /> Eliminar
+                              </button>
+                            );
+                          })()}
                         </div>
                       </div>
                     ))}
@@ -1132,10 +1174,26 @@ export default function AdminPanel({
             <UserPlus size={20} /> {editingUserId ? 'Editar perfil' : 'Crear perfil'}
           </h3>
           <form onSubmit={submitUser} className="space-y-3">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <input required minLength={3} maxLength={160} value={userForm.fullName} onChange={(e) => setUserForm((prev) => ({ ...prev, fullName: e.target.value }))} placeholder="Nombre completo" className="px-3 py-2.5 border border-cyan-200 rounded-lg" />
+            {userForm.roleNames.includes('sucursal') ? (
+              <div>
+                <label className="block text-sm font-semibold text-cyan-800 mb-1">Nombre de sucursal <span className="text-rose-500">*</span></label>
+                <input
+                  type="text"
+                  minLength={2}
+                  maxLength={120}
+                  required
+                  value={userForm.branchName}
+                  onChange={(e) => setUserForm((prev) => ({ ...prev, branchName: e.target.value, fullName: e.target.value }))}
+                  placeholder="Ej. Sucursal Centro, Sucursal Norte..."
+                  className="w-full px-3 py-2.5 border border-cyan-200 rounded-lg text-sm"
+                />
+              </div>
+            ) : (
+              <input required minLength={3} maxLength={160} value={userForm.fullName} onChange={(e) => setUserForm((prev) => ({ ...prev, fullName: e.target.value }))} placeholder="Nombre completo" className="w-full px-3 py-2.5 border border-cyan-200 rounded-lg" />
+            )}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <input required type="email" autoComplete="email" value={userForm.email} onChange={(e) => setUserForm((prev) => ({ ...prev, email: e.target.value }))} placeholder="Correo" className="px-3 py-2.5 border border-cyan-200 rounded-lg" />
-              <input type="password" minLength={editingUserId ? 0 : 6} autoComplete={editingUserId ? 'new-password' : 'new-password'} value={userForm.password} onChange={(e) => setUserForm((prev) => ({ ...prev, password: e.target.value }))} placeholder={editingUserId ? 'Nueva contrasena (opcional)' : 'Contrasena'} className="px-3 py-2.5 border border-cyan-200 rounded-lg" />
+              <input type="password" minLength={editingUserId ? 0 : 6} autoComplete="new-password" value={userForm.password} onChange={(e) => setUserForm((prev) => ({ ...prev, password: e.target.value }))} placeholder={editingUserId ? 'Nueva contrasena (opcional)' : 'Contrasena'} className="px-3 py-2.5 border border-cyan-200 rounded-lg" />
             </div>
             {userFormError ? <p className="text-sm text-rose-700">{userFormError}</p> : null}
             <label className="inline-flex items-center gap-2 text-sm text-cyan-800">
@@ -1202,6 +1260,9 @@ export default function AdminPanel({
                             <p className="font-semibold text-slate-800">{user.fullName}</p>
                             <p className="text-xs text-slate-500">{user.email}</p>
                             <p className="text-xs text-cyan-700">Roles: {user.roles.join(', ')}</p>
+                            {user.branchName && (
+                              <p className="text-xs text-emerald-700 mt-0.5">Sucursal: {user.branchName}</p>
+                            )}
                           </div>
                           <div className="flex items-center gap-2">
                             <button type="button" onClick={() => startEditUser(user)} className="inline-flex items-center gap-1 text-xs font-semibold text-cyan-700 hover:text-cyan-900">
@@ -1574,19 +1635,19 @@ export default function AdminPanel({
         </div>
       )}
 
-      {/* ── Sección Empleados ────────────────────────────────────────────────── */}
+      {/* ── Sección Colaboradores ───────────────────────────────────────────── */}
       {activeSection === 'employees' ? (
         <section className="bg-white rounded-2xl border border-cyan-100 shadow-sm p-5">
           <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
             <h3 className="font-heading font-semibold text-cyan-900 text-xl flex items-center gap-2">
-              <Users size={20} /> Empleados
+              <Users size={20} /> Colaboradores
             </h3>
             <button
               type="button"
               onClick={() => { resetEmployeeForm(); setShowEmployeeModal(true); }}
               className="inline-flex items-center gap-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-xl px-4 py-2.5 text-sm font-semibold shadow-sm transition-colors"
             >
-              <PlusCircle size={16} /> Nuevo empleado
+              <PlusCircle size={16} /> Nuevo colaborador
             </button>
           </div>
 
@@ -1638,7 +1699,7 @@ export default function AdminPanel({
                           </div>
                           <p className="font-semibold text-slate-800 text-sm mt-0.5">{emp.fullName}</p>
                           <p className="text-xs text-slate-400">
-                            {[emp.position, emp.branch, emp.department].filter(Boolean).join(' · ')}
+                            {[emp.position, emp.hireDate ? `Ingreso: ${emp.hireDate}` : null].filter(Boolean).join(' · ')}
                           </p>
                         </div>
                         <div className="flex items-center gap-1 shrink-0">
@@ -1693,7 +1754,7 @@ export default function AdminPanel({
         </section>
       ) : null}
 
-      {/* ── Modal empleado ───────────────────────────────────────────────────── */}
+      {/* ── Modal colaborador ───────────────────────────────────────────────── */}
       {showEmployeeModal && (
         <div
           className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 backdrop-blur-sm py-6 px-3 overflow-y-auto"
@@ -1703,7 +1764,7 @@ export default function AdminPanel({
             <div className="flex items-center justify-between px-6 py-4 border-b border-cyan-100 shrink-0">
               <h2 className="font-heading font-bold text-cyan-900 text-lg flex items-center gap-2">
                 {editingEmployeeId ? <Pencil size={18} /> : <PlusCircle size={18} />}
-                {editingEmployeeId ? 'Editar empleado' : 'Nuevo empleado'}
+                {editingEmployeeId ? 'Editar colaborador' : 'Nuevo colaborador'}
               </h2>
               <button type="button" onClick={resetEmployeeForm} className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100">
                 <X size={18} />
@@ -1712,17 +1773,29 @@ export default function AdminPanel({
 
             <div className="overflow-y-auto flex-1 px-6 py-5">
               <form id="employee-modal-form" onSubmit={submitEmployee} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <label className="text-xs font-semibold uppercase tracking-wide text-cyan-800">Código de colaborador</label>
-                    <input
-                      value={employeeForm.employeeCode}
-                      readOnly
-                      placeholder="Se genera automáticamente"
-                      className="w-full px-3 py-2.5 border border-cyan-200 rounded-lg text-sm bg-slate-50 text-slate-600"
-                    />
-                    <p className="text-xs text-slate-400">Se genera automáticamente al guardar.</p>
+                {/* Vista previa del código */}
+                {!editingEmployeeId && employeeForm.fullName.trim().length >= 1 && (
+                  <div className="flex items-center gap-2 bg-cyan-50 border border-cyan-200 rounded-xl px-3 py-2.5">
+                    <span className="text-xs text-cyan-600 font-semibold uppercase tracking-wide">Código que se generará:</span>
+                    <span className="font-mono text-sm font-bold text-cyan-800">
+                      TB-{employeeForm.fullName.trim().split(/\s+/).slice(0, 3).map((w) => w[0]?.toUpperCase() ?? '').join('')}-###
+                    </span>
+                    <span className="text-xs text-slate-400">(el número se asigna al guardar)</span>
                   </div>
+                )}
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {/* Código (solo visible en edición) */}
+                  {editingEmployeeId && (
+                    <div className="space-y-1 md:col-span-2">
+                      <label className="text-xs font-semibold uppercase tracking-wide text-cyan-800">Código de colaborador</label>
+                      <input
+                        value={employeeForm.employeeCode}
+                        readOnly
+                        className="w-full px-3 py-2.5 border border-cyan-200 rounded-lg text-sm bg-slate-50 text-cyan-700 font-mono font-bold"
+                      />
+                    </div>
+                  )}
                   <div className="space-y-1">
                     <label className="text-xs font-semibold uppercase tracking-wide text-cyan-800">Nombre completo *</label>
                     <input
@@ -1731,7 +1804,16 @@ export default function AdminPanel({
                       value={employeeForm.fullName}
                       onChange={(e) => setEmployeeForm((p) => ({ ...p, fullName: e.target.value }))}
                       placeholder="Nombre completo del colaborador"
-                      className="w-full px-3 py-2.5 border border-cyan-200 rounded-lg text-sm"
+                      className="w-full px-3 py-2.5 border border-cyan-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-semibold uppercase tracking-wide text-cyan-800">Puesto</label>
+                    <input
+                      value={employeeForm.position}
+                      onChange={(e) => setEmployeeForm((p) => ({ ...p, position: e.target.value }))}
+                      placeholder="Ej. Cajero, Encargado de tienda"
+                      className="w-full px-3 py-2.5 border border-cyan-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400"
                     />
                   </div>
                   <div className="space-y-1">
@@ -1742,7 +1824,7 @@ export default function AdminPanel({
                       value={employeeForm.email}
                       onChange={(e) => setEmployeeForm((p) => ({ ...p, email: e.target.value }))}
                       placeholder="correo@ejemplo.com"
-                      className="w-full px-3 py-2.5 border border-cyan-200 rounded-lg text-sm"
+                      className="w-full px-3 py-2.5 border border-cyan-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400"
                     />
                   </div>
                   <div className="space-y-1">
@@ -1755,44 +1837,17 @@ export default function AdminPanel({
                       value={employeeForm.phone}
                       onChange={(e) => setEmployeeForm((p) => ({ ...p, phone: e.target.value.replace(/\D/g, '').slice(0, 10) }))}
                       placeholder="10 dígitos"
-                      className="w-full px-3 py-2.5 border border-cyan-200 rounded-lg text-sm"
+                      className="w-full px-3 py-2.5 border border-cyan-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400"
                     />
                     <p className="text-xs text-slate-400">Ejemplo: 5512345678</p>
                   </div>
-                  <div className="space-y-1">
-                    <label className="text-xs font-semibold uppercase tracking-wide text-cyan-800">Puesto</label>
-                    <input
-                      value={employeeForm.position}
-                      onChange={(e) => setEmployeeForm((p) => ({ ...p, position: e.target.value }))}
-                      placeholder="Ej. Cajero, Encargado de tienda"
-                      className="w-full px-3 py-2.5 border border-cyan-200 rounded-lg text-sm"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-xs font-semibold uppercase tracking-wide text-cyan-800">Departamento</label>
-                    <input
-                      value={employeeForm.department}
-                      onChange={(e) => setEmployeeForm((p) => ({ ...p, department: e.target.value }))}
-                      placeholder="Ej. Operaciones, Ventas"
-                      className="w-full px-3 py-2.5 border border-cyan-200 rounded-lg text-sm"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-xs font-semibold uppercase tracking-wide text-cyan-800">Sucursal</label>
-                    <input
-                      value={employeeForm.branch}
-                      onChange={(e) => setEmployeeForm((p) => ({ ...p, branch: e.target.value }))}
-                      placeholder="Ej. Sucursal Centro"
-                      className="w-full px-3 py-2.5 border border-cyan-200 rounded-lg text-sm"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-xs font-semibold uppercase tracking-wide text-cyan-800">Turno</label>
-                    <input
-                      value={employeeForm.shift}
-                      onChange={(e) => setEmployeeForm((p) => ({ ...p, shift: e.target.value }))}
-                      placeholder="Ej. Matutino, Vespertino"
-                      className="w-full px-3 py-2.5 border border-cyan-200 rounded-lg text-sm"
+                  <div className="space-y-1 md:col-span-2">
+                    <label className="text-xs font-semibold uppercase tracking-wide text-cyan-800">Fecha de ingreso</label>
+                    <DatePicker
+                      value={employeeForm.hireDate}
+                      onChange={(v) => setEmployeeForm((p) => ({ ...p, hireDate: v }))}
+                      max={new Date().toISOString().slice(0, 10)}
+                      placeholder="¿Cuándo ingresó a la empresa?"
                     />
                   </div>
                 </div>
@@ -1815,7 +1870,7 @@ export default function AdminPanel({
                     checked={employeeForm.isActive}
                     onChange={(e) => setEmployeeForm((p) => ({ ...p, isActive: e.target.checked }))}
                   />
-                  Empleado activo (puede enviar reportes)
+                  Colaborador activo (puede enviar reportes)
                 </label>
               </form>
             </div>
@@ -1829,7 +1884,7 @@ export default function AdminPanel({
                 form="employee-modal-form"
                 className="inline-flex items-center gap-1.5 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg font-semibold px-5 py-2.5 text-sm shadow-sm"
               >
-                {editingEmployeeId ? 'Guardar cambios' : 'Registrar empleado'}
+                {editingEmployeeId ? 'Guardar cambios' : 'Registrar colaborador'}
               </button>
             </div>
           </div>

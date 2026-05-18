@@ -6,6 +6,7 @@ import AuthView from './components/AuthView';
 import AdminPanel from './components/AdminPanel';
 import HRDashboard from './components/hr/HRDashboard';
 import ReportForm from './components/hr/ReportForm';
+import NotificationBell from './components/NotificationBell';
 import { api } from './api/client';
 import { useToast } from './context/ToastContext';
 
@@ -28,6 +29,10 @@ function App() {
   const isAdmin = useMemo(() => user?.roles?.includes('administrador'), [user]);
   const isCapitalHumano = useMemo(() => user?.roles?.includes('capital_humano'), [user]);
   const canManageEmployees = useMemo(() => isAdmin || isCapitalHumano, [isAdmin, isCapitalHumano]);
+  const canReceiveNotifications = useMemo(
+    () => user?.roles?.some((r) => ['administrador', 'capital_humano', 'supervisor'].includes(r)),
+    [user]
+  );
 
   const loadSessionData = async (sessionToken) => {
     if (!sessionToken) return;
@@ -273,7 +278,7 @@ function App() {
     }
   };
 
-  // ── Empleados ──────────────────────────────────────────────────────────────
+  // ── Colaboradores ─────────────────────────────────────────────────────────
   const handleCreateEmployee = async (payload) => {
     try {
       await api.createEmployee(token, payload);
@@ -315,11 +320,13 @@ function App() {
       <div className="min-h-screen bg-[#ECFEFF] text-[#164E63]">
         <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-cyan-100 shadow-sm px-6 py-4">
           <div className="max-w-[1500px] mx-auto flex items-center gap-3">
-            <div className="w-10 h-10 bg-cyan-600 rounded-lg flex items-center justify-center text-white font-heading font-bold text-xl shadow-md">
-              T
-            </div>
+            <img
+              src="/logopngtutti.png"
+              alt="Tutibocado"
+              className="h-14 w-auto sm:h-16 object-contain drop-shadow-sm"
+            />
             <div>
-              <h1 className="font-heading font-semibold text-xl leading-tight">Tutibocado</h1>
+              <h1 className="font-heading font-semibold text-xl leading-tight">Tutti Bocado</h1>
               <p className="text-xs text-cyan-700 font-medium tracking-wide uppercase">Protocolos Operativos</p>
             </div>
           </div>
@@ -343,11 +350,13 @@ function App() {
               setView('dashboard');
             }}
           >
-            <div className="w-10 h-10 bg-cyan-600 rounded-lg flex items-center justify-center text-white font-heading font-bold text-xl shadow-md">
-              T
-            </div>
+            <img
+              src="/logopngtutti.png"
+              alt="Tutibocado"
+              className="h-14 w-auto sm:h-16 object-contain drop-shadow-sm"
+            />
             <div>
-              <h1 className="font-heading font-semibold text-xl leading-tight">Tutibocado</h1>
+              <h1 className="font-heading font-semibold text-xl leading-tight">Tutti Bocado</h1>
               <p className="text-xs text-cyan-700 font-medium tracking-wide uppercase">Protocolos Operativos</p>
             </div>
           </div>
@@ -414,6 +423,24 @@ function App() {
                 </button>
               </div>
             ) : null}
+
+            {/* Campana de notificaciones para admin, capital_humano y supervisor */}
+            {canReceiveNotifications && (
+              <NotificationBell
+                token={token}
+                onNotificationClick={(n) => {
+                  // hr_report → lleva al panel de Capital Humano (solo quienes tienen acceso)
+                  if (n.entityType === 'hr_report' && (isAdmin || isCapitalHumano)) {
+                    setSelectedProtocol(null);
+                    setView('hr');
+                  }
+                  // protocol_incident → vuelve al dashboard de protocolos
+                  if (n.entityType === 'protocol_incident') {
+                    setView('dashboard');
+                  }
+                }}
+              />
+            )}
 
             {/* Botón reportar visible para todos los roles */}
             <button
@@ -493,7 +520,7 @@ function App() {
         ) : null}
       </main>
 
-      {/* Modal de reporte para todos los empleados */}
+      {/* Modal de reporte para todos los colaboradores */}
       {showReportModal && (
         <div
           className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 backdrop-blur-sm py-6 px-3 overflow-y-auto"
