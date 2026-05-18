@@ -145,11 +145,11 @@ export const updateReportStatus = async (id, payload, reviewerUserId) => {
     updated_at: db.fn.now(),
   });
 
-  // Cuando el reporte es revisado/aceptado/rechazado, marcar sus notificaciones como leídas
+  // Cuando el reporte es procesado, eliminar sus notificaciones para no acumular historial
   if (['revisado', 'aceptado', 'rechazado'].includes(payload.status)) {
     await db('notifications')
-      .where({ entity_type: 'hr_report', entity_id: id, is_read: false })
-      .update({ is_read: true });
+      .where({ entity_type: 'hr_report', entity_id: id })
+      .delete();
   }
 
   return getReportById(id);
