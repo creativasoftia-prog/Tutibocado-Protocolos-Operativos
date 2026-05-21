@@ -1,1 +1,9 @@
 node_modules
+.vite
+.code
+.github
+backend/.env.local
+backend/.env.example
+frontend/.env.local
+frontend/.env.example
+
