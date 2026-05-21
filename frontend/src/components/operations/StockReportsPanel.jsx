@@ -10,6 +10,7 @@ function normalizeItems(report) {
     return report.items
       .map((item) => ({
         name: item?.name || item?.productName || 'Sin nombre',
+        category: item?.category || 'Sin categoría',
         quantity: Number(item?.quantity ?? item?.quantityAvailable ?? 0),
       }))
       .filter((item) => item.name && Number.isFinite(item.quantity));
@@ -18,6 +19,7 @@ function normalizeItems(report) {
   if (report.productName) {
     return [{
       name: report.productName,
+      category: report.category || 'Sin categoría',
       quantity: Number(report.quantityAvailable ?? 0),
     }];
   }
@@ -136,22 +138,33 @@ function ReportRow({ report, isAdmin, onDelete }) {
   return (
     <div className="border border-cyan-100 rounded-xl overflow-hidden">
       <div
-        className="flex flex-wrap items-center gap-2 px-4 py-3 bg-white cursor-pointer hover:bg-cyan-50/40 transition-colors"
+        className="flex flex-wrap items-center gap-4 px-4 py-3 bg-white cursor-pointer hover:bg-cyan-50/40 transition-colors"
         onClick={() => setExpanded((v) => !v)}
       >
-        <span className="font-mono text-xs text-gray-400 w-36 shrink-0">{report.reportNumber}</span>
-        <span className="text-xs text-gray-600">{formatDate(report.reportDate)}</span>
-        <span className="text-xs bg-cyan-100 text-cyan-800 rounded-full px-2 py-0.5">{report.branchName || 'Sin sucursal'}</span>
-        <span className="text-xs text-gray-500">{report.submittedByName || '—'}</span>
-        <span className="ml-auto text-xs text-gray-400">{items.length} producto{items.length !== 1 ? 's' : ''}</span>
-        {expanded ? <ChevronUp size={14} className="text-gray-400" /> : <ChevronDown size={14} className="text-gray-400" />}
+        <div className="flex flex-col w-32 shrink-0">
+          <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Folio</span>
+          <span className="font-mono text-xs text-gray-700 mt-0.5">{report.reportNumber}</span>
+        </div>
+        <div className="flex flex-col w-24 shrink-0">
+          <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Fecha</span>
+          <span className="text-xs text-gray-700 mt-0.5">{formatDate(report.reportDate)}</span>
+        </div>
+        <div className="flex flex-col">
+          <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Sucursal / Usuario</span>
+          <span className="text-xs bg-cyan-100 text-cyan-800 rounded-full px-2 py-0.5 mt-0.5 w-max">{report.submittedByName || 'Sin sucursal'}</span>
+        </div>
+        <div className="flex flex-col ml-auto text-right">
+          <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Total</span>
+          <span className="text-xs text-gray-600 mt-0.5">{items.length} producto{items.length !== 1 ? 's' : ''}</span>
+        </div>
+        {expanded ? <ChevronUp size={16} className="text-gray-400 ml-2" /> : <ChevronDown size={16} className="text-gray-400 ml-2" />}
         {isAdmin && (
           <button
             onClick={(e) => { e.stopPropagation(); onDelete(report.id); }}
-            className="text-red-400 hover:text-red-600 ml-1"
+            className="text-red-400 hover:text-red-600 ml-2"
             title="Eliminar"
           >
-            <Trash2 size={14} />
+            <Trash2 size={16} />
           </button>
         )}
       </div>
@@ -164,11 +177,17 @@ function ReportRow({ report, isAdmin, onDelete }) {
             <span>Creado: <span className="font-medium text-gray-700">{formatDate(report.createdAt)}</span></span>
           </div>
           {items.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
               {items.map((item, i) => (
-                <div key={i} className="bg-white rounded-lg border border-cyan-100 px-3 py-2">
-                  <p className="text-xs font-semibold text-gray-800">{item.name}</p>
-                  <p className="text-lg font-bold text-cyan-700 tabular-nums">{item.quantity}</p>
+                <div key={i} className="bg-white rounded-xl border border-cyan-100 px-4 py-3 shadow-sm flex flex-col justify-between">
+                  <div>
+                    <span className="text-[10px] font-semibold text-cyan-600 uppercase tracking-wider block mb-1">{item.category}</span>
+                    <p className="text-sm font-bold text-gray-800 break-words">{item.name}</p>
+                  </div>
+                  <div className="flex justify-between items-center mt-3 border-t border-cyan-50 pt-2">
+                    <span className="text-xs text-gray-500 font-medium uppercase">Cantidad</span>
+                    <span className="text-xl font-bold text-cyan-700 tabular-nums">{item.quantity}</span>
+                  </div>
                 </div>
               ))}
             </div>
@@ -188,6 +207,7 @@ export default function StockReportsPanel({ token, isAdmin = false }) {
   const toast = useToast();
   const [reports, setReports] = useState([]);
   const [types, setTypes] = useState([]);
+  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showTypesModal, setShowTypesModal] = useState(false);
   const [searchText, setSearchText] = useState('');
@@ -200,10 +220,16 @@ export default function StockReportsPanel({ token, isAdmin = false }) {
     setLoading(true);
     try {
       const reqs = [api.listStockReports(token)];
-      if (isAdmin) reqs.push(api.listStockTypes(token));
-      const [r, t] = await Promise.all(reqs);
-      setReports(r);
-      if (isAdmin) setTypes(t || []);
+      if (isAdmin) {
+        reqs.push(api.listStockTypes(token));
+        reqs.push(api.listUsers(token).catch(() => []));
+      }
+      const results = await Promise.all(reqs);
+      setReports(results[0]);
+      if (isAdmin) {
+        setTypes(results[1] || []);
+        setUsers(results[2] || []);
+      }
     } catch (err) { toast.error(err.message); }
     finally { setLoading(false); }
   };
@@ -211,14 +237,20 @@ export default function StockReportsPanel({ token, isAdmin = false }) {
   useEffect(() => { fetchAll(); }, []);
 
   const branchOptions = useMemo(() => {
-    const opts = Array.from(new Set(reports.map((r) => r.branchName).filter(Boolean)));
-    return opts.sort((a, b) => a.localeCompare(b, 'es'));
-  }, [reports]);
+    let opts = [];
+    if (isAdmin && users.length > 0) {
+      const sucursalUsers = users.filter((u) => u.roles && u.roles.includes('sucursal'));
+      opts = sucursalUsers.map((u) => u.fullName || u.username);
+    }
+    const reportBranches = reports.map((r) => r.submittedByName).filter(Boolean);
+    const combined = Array.from(new Set([...opts, ...reportBranches]));
+    return combined.sort((a, b) => a.localeCompare(b, 'es'));
+  }, [reports, users, isAdmin]);
 
   const filteredReports = useMemo(() => {
     const q = searchText.trim().toLowerCase();
     return reports.filter((r) => {
-      if (branchFilter && r.branchName !== branchFilter) return false;
+      if (branchFilter && r.submittedByName !== branchFilter) return false;
 
       const dateKey = toDayStamp(r.reportDate || r.createdAt);
       if (fromDate && dateKey && dateKey < fromDate) return false;
@@ -226,7 +258,7 @@ export default function StockReportsPanel({ token, isAdmin = false }) {
 
       if (!q) return true;
       const itemText = normalizeItems(r).map((it) => it.name).join(' ');
-      const haystack = `${r.reportNumber || ''} ${r.branchName || ''} ${r.submittedByName || ''} ${itemText}`.toLowerCase();
+      const haystack = `${r.reportNumber || ''} ${r.submittedByName || ''} ${itemText}`.toLowerCase();
       return haystack.includes(q);
     });
   }, [reports, searchText, branchFilter, fromDate, toDate]);

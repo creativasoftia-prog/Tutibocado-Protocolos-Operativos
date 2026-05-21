@@ -117,9 +117,10 @@ function ExistenciasTab({ token }) {
                 {items.length > 0 ? (
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {items.map((item, i) => (
-                      <div key={i} className="bg-cyan-50/60 rounded-xl border border-cyan-100 px-3 py-2">
-                        <p className="text-xs text-slate-600 leading-tight">{item.name}</p>
-                        <p className="text-xl font-bold text-cyan-700 tabular-nums">{item.quantity}</p>
+                      <div key={i} className="bg-cyan-50/60 rounded-xl border border-cyan-100 px-3 py-2 flex flex-col">
+                        <span className="text-[10px] font-bold text-cyan-700 uppercase tracking-wider mb-0.5">{item.category || 'Sin categoría'}</span>
+                        <p className="text-xs text-slate-600 leading-tight mb-2 flex-1">{item.name || item.productName || 'Sin nombre'}</p>
+                        <p className="text-xl font-bold text-cyan-700 tabular-nums">{item.quantity ?? item.quantityAvailable ?? 0}</p>
                       </div>
                     ))}
                   </div>
