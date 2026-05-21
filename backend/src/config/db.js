@@ -41,7 +41,7 @@ export const createDatabaseConfig = () => {
       client: 'pg',
       connection: buildPostgresConnection(),
       pool: {
-        min: 1,
+        min: 0,
         max: 10,
         acquireTimeoutMillis: 30000,
         createTimeoutMillis: 30000,

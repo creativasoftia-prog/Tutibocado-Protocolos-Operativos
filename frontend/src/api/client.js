@@ -82,4 +82,23 @@ export const api = {
   getUnreadCount: (token) => request('/notifications/unread-count', { token }),
   markNotificationRead: (token, id) => request(`/notifications/${id}/read`, { method: 'PATCH', token }),
   markAllNotificationsRead: (token) => request('/notifications/read-all', { method: 'PATCH', token }),
+
+  // ── Mis reportes (sucursal) ────────────────────────────────────────────────
+  getMyReports: (token) => request('/hr-reports/my', { token }),
+
+  // ── Existencias ────────────────────────────────────────────────────────────
+  listStockTypes: (token, onlyActive) => request(`/stock-reports/types${onlyActive ? '?onlyActive=true' : ''}`, { token }),
+  createStockType: (token, payload) => request('/stock-reports/types', { method: 'POST', token, body: payload }),
+  updateStockType: (token, id, payload) => request(`/stock-reports/types/${id}`, { method: 'PUT', token, body: payload }),
+  deleteStockType: (token, id) => request(`/stock-reports/types/${id}`, { method: 'DELETE', token }),
+  listStockReports: (token) => request('/stock-reports', { token }),
+  getMyStockReports: (token) => request('/stock-reports/my', { token }),
+  createStockReport: (token, payload) => request('/stock-reports', { method: 'POST', token, body: payload }),
+  deleteStockReport: (token, id) => request(`/stock-reports/${id}`, { method: 'DELETE', token }),
+
+  // ── Reportes Operativos ────────────────────────────────────────────────────
+  listOperationalReports: (token, formType) => request(`/operational-reports${formType ? `?formType=${formType}` : ''}`, { token }),
+  getMyOperationalReports: (token) => request('/operational-reports/my', { token }),
+  createOperationalReport: (token, payload) => request('/operational-reports', { method: 'POST', token, body: payload }),
+  deleteOperationalReport: (token, id) => request(`/operational-reports/${id}`, { method: 'DELETE', token }),
 };

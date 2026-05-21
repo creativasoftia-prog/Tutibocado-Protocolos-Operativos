@@ -77,20 +77,18 @@ export default function NotificationBell({ token, onNotificationClick }) {
   const handleMarkAll = async () => {
     try {
       await api.markAllNotificationsRead(token);
-      setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+      setNotifications([]);
       setUnreadCount(0);
     } catch {}
   };
 
-  // Click en una notificación: marca como leída, cierra panel y navega
+  // Click en una notificación: la elimina del servidor y la quita de la lista
   const handleClickNotification = async (n) => {
-    if (!n.isRead) {
-      try {
-        await api.markNotificationRead(token, n.id);
-        setNotifications((prev) => prev.map((notif) => (notif.id === n.id ? { ...notif, isRead: true } : notif)));
-        setUnreadCount((c) => Math.max(0, c - 1));
-      } catch {}
-    }
+    try {
+      await api.markNotificationRead(token, n.id);
+    } catch {}
+    setNotifications((prev) => prev.filter((notif) => notif.id !== n.id));
+    setUnreadCount((c) => Math.max(0, c - 1));
     setOpen(false);
     onNotificationClick?.(n);
   };
@@ -157,9 +155,7 @@ export default function NotificationBell({ token, onNotificationClick }) {
                   <button
                     key={n.id}
                     onClick={() => handleClickNotification(n)}
-                    className={`w-full text-left px-4 py-3 hover:bg-slate-50 transition-colors flex items-start gap-3 ${
-                      n.isRead ? 'opacity-55' : 'bg-white'
-                    }`}
+                    className="w-full text-left px-4 py-3 hover:bg-slate-50 transition-colors flex items-start gap-3"
                   >
                     {/* Type icon */}
                     <div

@@ -5,6 +5,7 @@ import {
   createReport,
   deleteReport,
   getReportById,
+  listMyReports,
   listReports,
   listReportsByEmployee,
   updateReportStatus,
@@ -22,6 +23,12 @@ hrReportsRouter.get('/', requireAnyRole('administrador', 'capital_humano'), asyn
     status: status || undefined,
     employeeId: employeeId ? parseInt(employeeId, 10) : undefined,
   });
+  return res.json(reports);
+});
+
+// ── Mis reportes (usuario autenticado — debe ir antes de /:id)
+hrReportsRouter.get('/my', async (req, res) => {
+  const reports = await listMyReports(req.user.sub);
   return res.json(reports);
 });
 
@@ -70,6 +77,7 @@ hrReportsRouter.post('/', async (req, res) => {
   try {
     const report = await createReport({
       employeeId: employee.id,
+      submittedByUserId: req.user.sub,
       type: parsed.data.type,
       subject: parsed.data.subject,
       description: parsed.data.description,

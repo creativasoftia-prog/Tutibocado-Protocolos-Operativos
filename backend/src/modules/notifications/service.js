@@ -58,13 +58,30 @@ export const getUnreadCount = async (userId) => {
 };
 
 export const markAsRead = async (notificationId, userId) => {
+  // Eliminar al leer: las notificaciones no se acumulan
   await db('notifications')
     .where({ id: notificationId, user_id: userId })
-    .update({ is_read: true });
+    .delete();
 };
 
 export const markAllAsRead = async (userId) => {
   await db('notifications')
-    .where({ user_id: userId, is_read: false })
-    .update({ is_read: true });
+    .where({ user_id: userId })
+    .delete();
+};
+
+/**
+ * Crea una notificación para un usuario específico (ej. respuesta a un reporte).
+ */
+export const createNotificationForUser = async (userId, { type, title, body, entityType, entityId }) => {
+  if (!userId) return;
+  await db('notifications').insert({
+    user_id: userId,
+    type,
+    title,
+    body: body || '',
+    entity_type: entityType,
+    entity_id: entityId,
+    is_read: false,
+  });
 };

@@ -24,23 +24,27 @@ authRouter.post('/login', async (req, res) => {
     return res.status(400).json({ message: 'Datos de acceso inválidos', errors: parsed.error.flatten() });
   }
 
-  const result = await loginWithEmailPassword(parsed.data);
-
-  if (!result) {
-    return res.status(401).json({ message: 'Credenciales inválidas' });
+  try {
+    const result = await loginWithEmailPassword(parsed.data);
+    if (!result) {
+      return res.status(401).json({ message: 'Credenciales inválidas' });
+    }
+    return res.json(result);
+  } catch (err) {
+    return res.status(503).json({ message: 'Servicio temporalmente no disponible. Intenta de nuevo.' });
   }
-
-  return res.json(result);
 });
 
 authRouter.get('/me', authenticate, async (req, res) => {
-  const profile = await getUserProfile(req.user.sub);
-
-  if (!profile) {
-    return res.status(404).json({ message: 'Usuario no encontrado' });
+  try {
+    const profile = await getUserProfile(req.user.sub);
+    if (!profile) {
+      return res.status(404).json({ message: 'Usuario no encontrado' });
+    }
+    return res.json(profile);
+  } catch (err) {
+    return res.status(503).json({ message: 'Servicio temporalmente no disponible.' });
   }
-
-  return res.json(profile);
 });
 
 authRouter.get('/users', authenticate, requireAnyRole('administrador'), async (_req, res) => {
@@ -53,7 +57,15 @@ const createUserSchema = z.object({
   email: z.string().email('Ingresa un correo válido'),
   password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres'),
   roleNames: z.array(z.string().min(2)).min(1, 'Debes seleccionar al menos un rol'),
-  branchName: z.string().min(2, 'El nombre de sucursal debe tener al menos 2 caracteres').max(120).optional().nullable()
+  branchName: z.preprocess((v) => (v === '' ? null : v), z.string().max(120).nullable().optional()),
+}).superRefine((data, ctx) => {
+  if (data.roleNames.includes('sucursal') && (!data.branchName || data.branchName.trim().length < 2)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'El nombre de sucursal debe tener al menos 2 caracteres',
+      path: ['branchName'],
+    });
+  }
 });
 
 authRouter.post('/users', authenticate, requireAnyRole('administrador'), async (req, res) => {
@@ -77,7 +89,15 @@ const updateUserSchema = z.object({
   password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres').optional().or(z.literal('')),
   roleNames: z.array(z.string().min(2)).min(1, 'Debes seleccionar al menos un rol'),
   isActive: z.boolean().default(true),
-  branchName: z.string().min(2, 'El nombre de sucursal debe tener al menos 2 caracteres').max(120).optional().nullable()
+  branchName: z.preprocess((v) => (v === '' ? null : v), z.string().max(120).nullable().optional()),
+}).superRefine((data, ctx) => {
+  if (data.roleNames.includes('sucursal') && (!data.branchName || data.branchName.trim().length < 2)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'El nombre de sucursal debe tener al menos 2 caracteres',
+      path: ['branchName'],
+    });
+  }
 });
 
 authRouter.put('/users/:userId', authenticate, requireAnyRole('administrador'), async (req, res) => {
