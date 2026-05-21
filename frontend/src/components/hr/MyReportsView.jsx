@@ -115,12 +115,28 @@ function ExistenciasTab({ token }) {
                   <span className="flex items-center gap-1 text-xs text-slate-400"><CalendarDays size={12} />{r.reportDate || formatDate(r.createdAt)}</span>
                 </div>
                 {items.length > 0 ? (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                    {items.map((item, i) => (
-                      <div key={i} className="bg-cyan-50/60 rounded-xl border border-cyan-100 px-3 py-2 flex flex-col">
-                        <span className="text-[10px] font-bold text-cyan-700 uppercase tracking-wider mb-0.5">{item.category || 'Sin categoría'}</span>
-                        <p className="text-xs text-slate-600 leading-tight mb-2 flex-1">{item.name || item.productName || 'Sin nombre'}</p>
-                        <p className="text-xl font-bold text-cyan-700 tabular-nums">{item.quantity ?? item.quantityAvailable ?? 0}</p>
+                  <div className="space-y-4">
+                    {Object.entries(items.reduce((acc, item) => {
+                      const cat = item.category || 'Sin categoría';
+                      if (!acc[cat]) acc[cat] = [];
+                      acc[cat].push(item);
+                      return acc;
+                    }, {})).map(([cat, catItems]) => (
+                      <div key={cat}>
+                        <h4 className="text-xs font-bold text-cyan-800 uppercase mb-2 border-b border-cyan-100 pb-1">
+                          {cat} ({catItems.length})
+                        </h4>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                          {catItems.map((item, i) => (
+                            <div key={i} className="bg-cyan-50/60 rounded-xl border border-cyan-100 px-3 py-2 flex flex-col">
+                              <p className="text-xs font-semibold text-slate-700 leading-tight mb-2 flex-1">{item.name || item.productName || 'Sin nombre'}</p>
+                              <div className="flex justify-between items-end mt-1 border-t border-cyan-100/50 pt-1.5">
+                                <span className="text-[10px] text-slate-500 font-medium uppercase">Cantidad</span>
+                                <span className="text-lg font-bold text-cyan-700 tabular-nums">{item.quantity ?? item.quantityAvailable ?? 0}</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     ))}
                   </div>

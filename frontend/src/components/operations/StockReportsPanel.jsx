@@ -141,23 +141,23 @@ function ReportRow({ report, isAdmin, onDelete }) {
         className="flex flex-wrap items-center gap-4 px-4 py-3 bg-white cursor-pointer hover:bg-cyan-50/40 transition-colors"
         onClick={() => setExpanded((v) => !v)}
       >
-        <div className="flex flex-col w-32 shrink-0">
-          <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Folio</span>
-          <span className="font-mono text-xs text-gray-700 mt-0.5">{report.reportNumber}</span>
+        <div className="flex flex-col w-36 shrink-0">
+          <span className="text-xs font-bold text-cyan-800 uppercase tracking-wide">Folio</span>
+          <span className="font-mono text-sm font-semibold text-gray-900 mt-1">{report.reportNumber}</span>
         </div>
-        <div className="flex flex-col w-24 shrink-0">
-          <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Fecha</span>
-          <span className="text-xs text-gray-700 mt-0.5">{formatDate(report.reportDate)}</span>
+        <div className="flex flex-col w-28 shrink-0">
+          <span className="text-xs font-bold text-cyan-800 uppercase tracking-wide">Fecha</span>
+          <span className="text-sm font-semibold text-gray-900 mt-1">{formatDate(report.reportDate)}</span>
         </div>
         <div className="flex flex-col">
-          <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Sucursal / Usuario</span>
-          <span className="text-xs bg-cyan-100 text-cyan-800 rounded-full px-2 py-0.5 mt-0.5 w-max">{report.submittedByName || 'Sin sucursal'}</span>
+          <span className="text-xs font-bold text-cyan-800 uppercase tracking-wide">Sucursal / Usuario</span>
+          <span className="text-sm font-semibold bg-cyan-100 text-cyan-900 rounded-full px-3 py-1 mt-1 w-max">{report.submittedByName || 'Sin sucursal'}</span>
         </div>
         <div className="flex flex-col ml-auto text-right">
-          <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Total</span>
-          <span className="text-xs text-gray-600 mt-0.5">{items.length} producto{items.length !== 1 ? 's' : ''}</span>
+          <span className="text-xs font-bold text-cyan-800 uppercase tracking-wide">Total</span>
+          <span className="text-sm font-semibold text-gray-900 mt-1">{items.length} producto{items.length !== 1 ? 's' : ''}</span>
         </div>
-        {expanded ? <ChevronUp size={16} className="text-gray-400 ml-2" /> : <ChevronDown size={16} className="text-gray-400 ml-2" />}
+        {expanded ? <ChevronUp size={18} className="text-gray-500 ml-2" /> : <ChevronDown size={18} className="text-gray-500 ml-2" />}
         {isAdmin && (
           <button
             onClick={(e) => { e.stopPropagation(); onDelete(report.id); }}
@@ -171,22 +171,33 @@ function ReportRow({ report, isAdmin, onDelete }) {
 
       {expanded && (
         <div className="border-t border-cyan-100 bg-cyan-50/30 px-4 py-3">
-          <div className="flex flex-wrap gap-3 text-xs text-gray-500 mb-3">
-            <span>Folio: <span className="font-medium text-gray-700">{report.reportNumber}</span></span>
-            <span>Fecha reporte: <span className="font-medium text-gray-700">{formatDate(report.reportDate)}</span></span>
-            <span>Creado: <span className="font-medium text-gray-700">{formatDate(report.createdAt)}</span></span>
+          <div className="flex flex-wrap gap-4 text-sm text-gray-600 mb-4">
+            <span>Folio: <span className="font-bold text-gray-900">{report.reportNumber}</span></span>
+            <span>Fecha reporte: <span className="font-bold text-gray-900">{formatDate(report.reportDate)}</span></span>
+            <span>Creado: <span className="font-bold text-gray-900">{formatDate(report.createdAt)}</span></span>
           </div>
           {items.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-              {items.map((item, i) => (
-                <div key={i} className="bg-white rounded-xl border border-cyan-100 px-4 py-3 shadow-sm flex flex-col justify-between">
-                  <div>
-                    <span className="text-[10px] font-semibold text-cyan-600 uppercase tracking-wider block mb-1">{item.category}</span>
-                    <p className="text-sm font-bold text-gray-800 break-words">{item.name}</p>
-                  </div>
-                  <div className="flex justify-between items-center mt-3 border-t border-cyan-50 pt-2">
-                    <span className="text-xs text-gray-500 font-medium uppercase">Cantidad</span>
-                    <span className="text-xl font-bold text-cyan-700 tabular-nums">{item.quantity}</span>
+            <div className="space-y-5">
+              {Object.entries(items.reduce((acc, item) => {
+                const cat = item.category || 'Sin categoría';
+                if (!acc[cat]) acc[cat] = [];
+                acc[cat].push(item);
+                return acc;
+              }, {})).map(([cat, catItems]) => (
+                <div key={cat}>
+                  <h4 className="text-sm font-extrabold text-cyan-900 uppercase mb-4 border-b-2 border-cyan-200 pb-2">
+                    {cat} <span className="bg-cyan-100 text-cyan-800 rounded-full px-2 py-0.5 text-xs ml-1">{catItems.length}</span>
+                  </h4>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {catItems.map((item, i) => (
+                      <div key={i} className="bg-white rounded-xl border border-cyan-200 px-4 py-4 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
+                        <p className="text-base font-bold text-gray-900 break-words leading-tight">{item.name}</p>
+                        <div className="flex justify-between items-end mt-4 border-t border-cyan-100 pt-3">
+                          <span className="text-sm font-bold text-cyan-800 uppercase tracking-wide">Cantidad</span>
+                          <span className="text-2xl font-extrabold text-cyan-700 tabular-nums leading-none">{item.quantity}</span>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               ))}
