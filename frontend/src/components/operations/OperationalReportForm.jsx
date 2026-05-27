@@ -161,7 +161,7 @@ export default function OperationalReportForm({ token, onClose, onCreated }) {
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6">
         <div className="flex items-center justify-between mb-5">
           <h2 className="font-heading font-bold text-cyan-900 text-lg flex items-center gap-2">
-            <ClipboardCheck size={20} /> Reporte Operativo
+            <ClipboardCheck size={20} /> Recomendaciones de la semana y demandas de los clientes
           </h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
         </div>

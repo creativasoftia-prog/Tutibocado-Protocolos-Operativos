@@ -18,10 +18,17 @@ const mapRow = (row) => ({
  * Se llama de forma fire-and-forget; los errores no deben romper el flujo principal.
  */
 export const createNotificationsForEntry = async ({ type, title, body, entityType, entityId }) => {
+  let targetRoles = [...NOTIFY_ROLES];
+
+  // Capital Humano solo debe recibir notificaciones de incidencias de personal (hr_report)
+  if (entityType !== 'hr_report') {
+    targetRoles = targetRoles.filter(role => role !== 'capital_humano');
+  }
+
   const users = await db('users as u')
     .innerJoin('user_roles as ur', 'ur.user_id', 'u.id')
     .innerJoin('roles as r', 'r.id', 'ur.role_id')
-    .whereIn('r.name', NOTIFY_ROLES)
+    .whereIn('r.name', targetRoles)
     .where('u.is_active', true)
     .distinct('u.id as userId')
     .select('u.id as userId');

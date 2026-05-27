@@ -461,7 +461,7 @@ export default function AdminPanel({
       email: emp.email || '',
       phone: emp.phone || '',
       position: emp.position || '',
-      hireDate: emp.hireDate || '',
+      hireDate: emp.hireDate ? String(emp.hireDate).slice(0, 10) : '',
       isActive: emp.isActive !== false,
       notes: emp.notes || '',
     });

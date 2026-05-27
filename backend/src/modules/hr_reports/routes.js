@@ -51,7 +51,7 @@ hrReportsRouter.get('/:id', async (req, res) => {
 
 const createReportSchema = z.object({
   employeeCode: z.string().regex(/^TB-[A-Z]{1,4}-\d{3,6}$/i, 'El código de colaborador debe tener formato TB-XXX-001'),
-  type: z.enum(['falta', 'enfermedad', 'situacion', 'permiso', 'otro'], { message: 'Selecciona un tipo de reporte válido' }),
+  type: z.enum(['falta', 'enfermedad', 'situacion', 'permiso', 'vacaciones', 'otro'], { message: 'Selecciona un tipo de reporte válido' }),
   subject: z.string().min(5, 'El asunto debe tener al menos 5 caracteres').max(220, 'El asunto no puede exceder 220 caracteres'),
   description: z.string().min(10, 'La descripción debe tener al menos 10 caracteres'),
   incidentDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'La fecha debe estar en formato YYYY-MM-DD'),
