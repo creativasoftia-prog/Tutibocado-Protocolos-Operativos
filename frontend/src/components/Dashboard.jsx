@@ -4,7 +4,7 @@ import CategorySidebar from './dashboard/CategorySidebar';
 import ProtocolCardsGrid from './dashboard/ProtocolCardsGrid';
 import ProtocolAgent from './dashboard/ProtocolAgent';
 
-export default function Dashboard({ protocols, onSelect }) {
+export default function Dashboard({ protocols, onSelect, isSucursal, onOpenReportForm }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeFilter, setActiveFilter] = useState('Todos');
 
@@ -21,6 +21,10 @@ export default function Dashboard({ protocols, onSelect }) {
 
   const PAGE_SIZE = 12;
   const [page, setPage] = useState(0);
+
+  const currentDay = new Date().getDay();
+  // Mostrar miércoles (3) y sábado (6)
+  const isReportDay = currentDay === 3 || currentDay === 6;
 
   // Resetear página al cambiar filtros
   useEffect(() => { setPage(0); }, [searchTerm, activeFilter]);
@@ -68,6 +72,20 @@ export default function Dashboard({ protocols, onSelect }) {
         {/* Área principal */}
         <section className="space-y-4 md:col-start-2 md:pr-2 xl:pr-4">
           <ProtocolAgent protocols={protocols} onSelect={onSelect} />
+
+          {isSucursal && isReportDay && (
+            <div className="bg-gradient-to-r from-orange-400 to-amber-500 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between text-white shadow-md">
+              <p className="text-sm font-semibold text-center sm:text-left mb-3 sm:mb-0">
+                No olvides hacer tu reporte de preferencias de demanda y clientes los días miércoles y sábados.
+              </p>
+              <button
+                onClick={onOpenReportForm}
+                className="shrink-0 bg-white text-orange-600 px-4 py-2 rounded-xl text-sm font-bold shadow hover:bg-orange-50 transition-colors"
+              >
+                Hacer reporte ahora
+              </button>
+            </div>
+          )}
 
           <div className="flex items-center justify-between bg-white/60 border border-cyan-100 rounded-xl px-4 py-2.5">
             <span className="text-sm text-cyan-800 font-medium">

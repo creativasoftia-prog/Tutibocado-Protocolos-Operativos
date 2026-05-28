@@ -32,7 +32,7 @@ function formatDate(value) {
   const normalized = String(value).includes('T') ? value : `${value}T12:00:00`;
   const dt = new Date(normalized);
   if (Number.isNaN(dt.getTime())) return String(value);
-  return dt.toLocaleDateString('es-MX');
+  return dt.toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
 function toDayStamp(value) {

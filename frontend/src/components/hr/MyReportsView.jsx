@@ -8,7 +8,7 @@ import OperationalReportForm from '../operations/OperationalReportForm';
 const TABS = [
   { key: 'incidencias', label: 'Incidencias de Personal', Icon: FileText },
   { key: 'existencias', label: 'Existencias', Icon: Package },
-  { key: 'operativos', label: 'Reportes Operativos', Icon: ClipboardCheck },
+  { key: 'operativos', label: 'Preferencias y demandas del cliente', Icon: ClipboardCheck },
 ];
 
 const FORM_LABELS = {
@@ -19,7 +19,10 @@ const FORM_LABELS = {
 
 function formatDate(iso) {
   if (!iso) return '—';
-  return new Date(iso).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
+  const normalized = String(iso).includes('T') ? iso : `${iso}T12:00:00`;
+  const dt = new Date(normalized);
+  if (Number.isNaN(dt.getTime())) return String(iso);
+  return dt.toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
 // ── Tab: Incidencias de Personal ──────────────────────────────────────────────
@@ -57,7 +60,6 @@ function IncidenciasTab({ token }) {
           {r.employeeName && (
             <p className="text-xs text-slate-500 mb-2">
               Colaborador: <span className="font-medium text-slate-700">{r.employeeName}</span>
-              {r.employeeCode && <span className="ml-1 text-slate-400">· {r.employeeCode}</span>}
             </p>
           )}
           <p className="text-xs text-slate-500 mb-1">Fecha del incidente: <span className="font-medium text-slate-700">{formatDate(r.incidentDate)}</span></p>
@@ -112,7 +114,7 @@ function ExistenciasTab({ token }) {
               <div key={r.id} className="bg-white rounded-2xl border border-cyan-100 shadow-sm p-4 sm:p-5">
                 <div className="flex flex-wrap items-start justify-between gap-2 mb-3">
                   <span className="text-xs font-mono text-slate-400">{r.reportNumber}</span>
-                  <span className="flex items-center gap-1 text-xs text-slate-400"><CalendarDays size={12} />{r.reportDate || formatDate(r.createdAt)}</span>
+                  <span className="flex items-center gap-1 text-xs text-slate-400"><CalendarDays size={12} />{r.reportDate ? formatDate(r.reportDate) : formatDate(r.createdAt)}</span>
                 </div>
                 {items.length > 0 ? (
                   <div className="space-y-4">
@@ -156,12 +158,19 @@ function ExistenciasTab({ token }) {
   );
 }
 
-// ── Tab: Reportes Operativos ──────────────────────────────────────────────────
-function OperativosTab({ token }) {
+// ── Tab: Preferencias y demandas del cliente ──────────────────────────────────────────────────
+function OperativosTab({ token, autoOpen, onOpened }) {
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showForm, setShowForm] = useState(false);
+
+  useEffect(() => {
+    if (autoOpen) {
+      setShowForm(true);
+      if (onOpened) onOpened();
+    }
+  }, [autoOpen, onOpened]);
 
   const load = useCallback(async () => {
     setLoading(true); setError('');
@@ -183,7 +192,7 @@ function OperativosTab({ token }) {
         </button>
       </div>
       {loading ? <Spinner /> : error ? <ErrorBox msg={error} /> : !reports.length ? (
-        <Empty icon={ClipboardCheck} label="Aún no has enviado reportes operativos." />
+        <Empty icon={ClipboardCheck} label="Aún no has enviado reportes de preferencias y demandas." />
       ) : (
         <div className="flex flex-col gap-3">
           {reports.map((r) => (
@@ -198,7 +207,7 @@ function OperativosTab({ token }) {
                 <span className="flex items-center gap-1 text-xs text-slate-400"><CalendarDays size={12} />{formatDate(r.createdAt)}</span>
               </div>
               <div className="flex flex-wrap gap-3 text-xs text-slate-500">
-                <span>Fecha: <span className="font-medium text-slate-700">{r.reportDate}</span></span>
+                <span>Fecha: <span className="font-medium text-slate-700">{formatDate(r.reportDate)}</span></span>
                 {r.shift && <span>Turno: <span className="font-medium text-slate-700">{r.shift}</span></span>}
                 {r.periodLabel && <span>Período: <span className="font-medium text-slate-700">{r.periodLabel}</span></span>}
                 <span>Productos: <span className="font-medium text-slate-700">{Array.isArray(r.items) ? r.items.length : 0}</span></span>
@@ -237,7 +246,7 @@ function Empty({ icon: Icon, label }) {
 }
 
 // ── Componente principal ──────────────────────────────────────────────────────
-export default function MyReportsView({ token, initialTab = 'incidencias' }) {
+export default function MyReportsView({ token, initialTab = 'incidencias', autoOpenReport, onReportOpened }) {
   const [activeTab, setActiveTab] = useState(initialTab);
 
   useEffect(() => {
@@ -277,7 +286,7 @@ export default function MyReportsView({ token, initialTab = 'incidencias' }) {
       {/* Content */}
       {activeTab === 'incidencias' && <IncidenciasTab token={token} />}
       {activeTab === 'existencias' && <ExistenciasTab token={token} />}
-      {activeTab === 'operativos' && <OperativosTab token={token} />}
+      {activeTab === 'operativos' && <OperativosTab token={token} autoOpen={autoOpenReport && activeTab === 'operativos'} onOpened={onReportOpened} />}
     </div>
   );
 }

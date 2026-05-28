@@ -160,8 +160,11 @@ export default function OperationalReportForm({ token, onClose, onCreated }) {
     <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 backdrop-blur-sm py-6 px-3 overflow-y-auto">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6">
         <div className="flex items-center justify-between mb-5">
-          <h2 className="font-heading font-bold text-cyan-900 text-lg flex items-center gap-2">
-            <ClipboardCheck size={20} /> Recomendaciones de la semana y demandas de los clientes
+          <h2 className="font-heading font-bold text-cyan-900 text-lg flex flex-col gap-1">
+            <div className="flex items-center gap-2">
+              <ClipboardCheck size={20} /> Preferencias y demandas de los clientes
+            </div>
+            <span className="text-sm font-normal text-cyan-700 italic">Hacer los días sábados y miércoles sin falta.</span>
           </h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
         </div>

@@ -29,6 +29,7 @@ function App() {
   const [actionError, setActionError] = useState('');
   const [employees, setEmployees] = useState([]);
   const [showReportModal, setShowReportModal] = useState(false);
+  const [autoOpenReport, setAutoOpenReport] = useState(false);
   const toast = useToast();
 
   const isAdmin = useMemo(() => user?.roles?.includes('administrador'), [user]);
@@ -609,7 +610,12 @@ function App() {
 
         {view === 'myreports' && isSucursal ? (
           <div className="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8">
-            <MyReportsView token={token} initialTab={myReportsTab} />
+            <MyReportsView 
+              token={token} 
+              initialTab={myReportsTab} 
+              autoOpenReport={autoOpenReport} 
+              onReportOpened={() => setAutoOpenReport(false)} 
+            />
           </div>
         ) : null}
 
@@ -624,7 +630,16 @@ function App() {
         ) : null}
 
         {view !== 'admin' && view !== 'hr' && view !== 'myreports' && view !== 'reports' && !selectedProtocol ? (
-          <Dashboard protocols={protocols} onSelect={setSelectedProtocol} />
+          <Dashboard 
+            protocols={protocols} 
+            onSelect={setSelectedProtocol} 
+            isSucursal={isSucursal} 
+            onOpenReportForm={() => {
+              setView('myreports');
+              setMyReportsTab('operativos');
+              setAutoOpenReport(true);
+            }} 
+          />
         ) : null}
       </main>
 

@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
-import { ClipboardCheck, ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
+import { ClipboardCheck, ChevronDown, ChevronUp, Trash2, Download } from 'lucide-react';
+import * as XLSX from 'xlsx';
 import { api } from '../../api/client';
 import { useToast } from '../../context/ToastContext';
 
@@ -39,7 +40,7 @@ function formatDate(value) {
   const normalized = String(value).includes('T') ? value : `${value}T12:00:00`;
   const dt = new Date(normalized);
   if (Number.isNaN(dt.getTime())) return String(value);
-  return dt.toLocaleDateString('es-MX');
+  return dt.toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
 function toDayStamp(value) {
@@ -107,7 +108,7 @@ function ReportRow({ report, onDelete, isAdmin }) {
             {TYPE_LABELS[report.formType] || report.formType}
           </span>
         </td>
-        <td className="px-3 py-2 text-gray-700">{report.reportDate ? new Date(report.reportDate + 'T12:00:00').toLocaleDateString('es-MX') : '—'}</td>
+        <td className="px-3 py-2 text-gray-700">{formatDate(report.reportDate)}</td>
         <td className="px-3 py-2 text-gray-600 capitalize">{report.formType === 'mas_vendidos' ? (report.periodLabel || '—') : (report.shift || '—')}</td>
         <td className="px-3 py-2">
           <button
@@ -209,11 +210,142 @@ export default function OperationalReportsPanel({ token, isAdmin = false }) {
     catch (err) { toast.error(err.message); }
   };
 
+  const getExportData = () => {
+    const headers = ['Folio', 'Tipo', 'Fecha', 'Turno/Período', 'Sucursal', 'Encargado', 'Producto', 'Detalles', 'Cantidad/Estrellas', 'Notas del Encargado'];
+    const rows = [];
+
+    filteredReports.forEach((r) => {
+      const reportBase = [
+        r.reportNumber || '',
+        TYPE_LABELS[r.formType] || r.formType || '',
+        formatDate(r.reportDate),
+        r.formType === 'mas_vendidos' ? (r.periodLabel || '') : (r.shift || ''),
+        r.branchName || '',
+        r.encargadoName || r.submittedByName || ''
+      ];
+
+      const items = safeParseJson(r.items, []);
+      if (!Array.isArray(items) || items.length === 0) {
+        rows.push([...reportBase, 'Sin productos', '', '', r.managerNote || '']);
+      } else {
+        items.forEach((it, idx) => {
+          let details = '';
+          let quantity = '';
+          if (r.formType === 'demanda_no_atendida') {
+            details = (it.categories || []).join('; ');
+            quantity = it.timesRequested || 1;
+          } else if (r.formType === 'baja_demanda') {
+            details = (it.reasons || []).map((k) => (k === 'no_piden' ? 'No lo piden' : 'Lo ignoran')).join('; ');
+          } else if (r.formType === 'mas_vendidos') {
+            quantity = it.stars ? `${it.stars} estrellas` : '';
+          }
+          const note = idx === 0 ? (r.managerNote || '') : '';
+          rows.push([...reportBase, it.product || it.name || '', details, quantity, note]);
+        });
+      }
+    });
+
+    return { headers, rows };
+  };
+
+  const exportToCSV = () => {
+    if (filteredReports.length === 0) {
+      toast.error('No hay datos para exportar.');
+      return;
+    }
+    const { headers, rows } = getExportData();
+    const escapeCSV = (val) => {
+      const str = String(val).replace(/"/g, '""');
+      return `"${str}"`;
+    };
+    const csvContent = [headers.map(escapeCSV).join(','), ...rows.map((row) => row.map(escapeCSV).join(','))].join('\n');
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `preferencias_demandas_${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const exportToExcel = () => {
+    if (filteredReports.length === 0) {
+      toast.error('No hay datos para exportar.');
+      return;
+    }
+    const { headers, rows } = getExportData();
+    const worksheet = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Demandas y Preferencias');
+    XLSX.writeFile(workbook, `preferencias_demandas_${new Date().toISOString().slice(0, 10)}.xlsx`);
+  };
+
+  const exportToMarkdown = () => {
+    if (filteredReports.length === 0) {
+      toast.error('No hay datos para exportar.');
+      return;
+    }
+    const { headers, rows } = getExportData();
+    const headerLine = `| ${headers.join(' | ')} |`;
+    const separatorLine = `| ${headers.map(() => '---').join(' | ')} |`;
+    const dataLines = rows.map((row) => `| ${row.map(val => String(val).replace(/\|/g, '\\|').replace(/\n/g, ' ')).join(' | ')} |`);
+    
+    const mdContent = [
+      `# Preferencias y demandas del cliente (${new Date().toLocaleDateString('es-MX')})`,
+      '',
+      headerLine,
+      separatorLine,
+      ...dataLines
+    ].join('\n');
+
+    const blob = new Blob([mdContent], { type: 'text/markdown;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `preferencias_demandas_${new Date().toISOString().slice(0, 10)}.md`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <section className="bg-white rounded-2xl border border-cyan-100 shadow-sm p-5">
-      <h3 className="font-heading font-semibold text-cyan-900 text-xl flex items-center gap-2 mb-5">
-        <ClipboardCheck size={20} /> Reportes Operativos
-      </h3>
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
+        <h3 className="font-heading font-semibold text-cyan-900 text-xl flex items-center gap-2">
+          <ClipboardCheck size={20} /> Preferencias y demandas del cliente
+        </h3>
+        {isAdmin && (
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={exportToExcel}
+              className="inline-flex items-center gap-1.5 border border-cyan-200 rounded-xl px-3 py-2 text-sm font-semibold text-cyan-700 hover:bg-cyan-50 transition-colors"
+              title="Exportar la tabla actual a formato Excel (.xlsx)"
+            >
+              <Download size={14} /> Excel
+            </button>
+            <button
+              type="button"
+              onClick={exportToCSV}
+              className="inline-flex items-center gap-1.5 border border-cyan-200 rounded-xl px-3 py-2 text-sm font-semibold text-cyan-700 hover:bg-cyan-50 transition-colors"
+              title="Exportar la tabla actual a formato de valores separados por comas (.csv)"
+            >
+              <Download size={14} /> CSV
+            </button>
+            <button
+              type="button"
+              onClick={exportToMarkdown}
+              className="inline-flex items-center gap-1.5 border border-cyan-200 rounded-xl px-3 py-2 text-sm font-semibold text-cyan-700 hover:bg-cyan-50 transition-colors"
+              title="Exportar la tabla actual a Markdown (.md)"
+            >
+              <Download size={14} /> Markdown
+            </button>
+          </div>
+        )}
+      </div>
 
       {/* Tabs */}
       <div className="flex flex-wrap gap-2 mb-4 border-b border-cyan-100 pb-3">
@@ -283,7 +415,7 @@ export default function OperationalReportsPanel({ token, isAdmin = false }) {
       ) : filteredReports.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 text-gray-400 gap-2">
           <ClipboardCheck size={36} strokeWidth={1.5} />
-          <p className="text-sm">Sin reportes operativos para este filtro.</p>
+          <p className="text-sm">Sin reportes de preferencias y demandas para este filtro.</p>
         </div>
       ) : (
         <div className="overflow-x-auto">

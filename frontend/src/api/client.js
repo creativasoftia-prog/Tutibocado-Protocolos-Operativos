@@ -97,7 +97,7 @@ export const api = {
   createStockReport: (token, payload) => request('/stock-reports', { method: 'POST', token, body: payload }),
   deleteStockReport: (token, id) => request(`/stock-reports/${id}`, { method: 'DELETE', token }),
 
-  // ── Reportes Operativos ────────────────────────────────────────────────────
+  // ── Preferencias y demandas del cliente ────────────────────────────────────────────────────
   listOperationalReports: (token, formType) => request(`/operational-reports${formType ? `?formType=${formType}` : ''}`, { token }),
   getMyOperationalReports: (token) => request('/operational-reports/my', { token }),
   createOperationalReport: (token, payload) => request('/operational-reports', { method: 'POST', token, body: payload }),

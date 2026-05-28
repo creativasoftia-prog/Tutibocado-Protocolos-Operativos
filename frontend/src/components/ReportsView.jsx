@@ -5,7 +5,7 @@ import OperationalReportsPanel from './operations/OperationalReportsPanel';
 
 const TABS = [
   { key: 'existencias', label: 'Existencias', Icon: Package },
-  { key: 'operativos', label: 'Reportes Operativos', Icon: ClipboardCheck },
+  { key: 'operativos', label: 'Preferencias y demandas del cliente', Icon: ClipboardCheck },
 ];
 
 export default function ReportsView({ token, isAdmin = false, initialTab = 'existencias' }) {
