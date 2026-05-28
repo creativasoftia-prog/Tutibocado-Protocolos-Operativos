@@ -7,7 +7,8 @@ import {
   getUserProfile,
   listUsersWithRoles,
   loginWithEmailPassword,
-  updateUserWithRoles
+  updateUserWithRoles,
+  renewToken
 } from './service.js';
 
 export const authRouter = Router();
@@ -50,6 +51,18 @@ authRouter.get('/me', authenticate, async (req, res) => {
 authRouter.get('/users', authenticate, requireAnyRole('administrador'), async (_req, res) => {
   const users = await listUsersWithRoles();
   return res.json(users);
+});
+
+authRouter.post('/renew', authenticate, async (req, res) => {
+  try {
+    const result = await renewToken(req.user.sub);
+    if (!result) {
+      return res.status(401).json({ message: 'Usuario no válido o inactivo' });
+    }
+    return res.json(result);
+  } catch (err) {
+    return res.status(503).json({ message: 'Servicio temporalmente no disponible.' });
+  }
 });
 
 const createUserSchema = z.object({

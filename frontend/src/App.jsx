@@ -9,6 +9,7 @@ import MyReportsView from './components/hr/MyReportsView';
 import ReportForm from './components/hr/ReportForm';
 import ReportsView from './components/ReportsView';
 import NotificationBell from './components/NotificationBell';
+import SessionManager from './components/SessionManager';
 import { api } from './api/client';
 import { useToast } from './context/ToastContext';
 
@@ -115,6 +116,11 @@ function App() {
     setEmployees([]);
     setSelectedProtocol(null);
     setView('dashboard');
+  };
+
+  const handleRenewToken = (newToken) => {
+    localStorage.setItem('tb_token', newToken);
+    setToken(newToken);
   };
 
   const refreshAdminData = async () => {
@@ -347,6 +353,8 @@ function App() {
 
   return (
     <div className="min-h-screen bg-[#ECFEFF] text-[#164E63]">
+      <SessionManager token={token} onRenew={handleRenewToken} onLogout={handleLogout} />
+      
       <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-cyan-100 shadow-sm px-6 py-4">
         <div className="max-w-[1500px] mx-auto flex items-center justify-between gap-4">
           <div

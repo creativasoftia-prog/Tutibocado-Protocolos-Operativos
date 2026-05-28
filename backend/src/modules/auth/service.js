@@ -179,3 +179,34 @@ export const deleteUserById = async ({ userId, actorUserId }) => {
     return { deleted: true };
   });
 };
+
+export const renewToken = async (userId) => {
+  const user = await db('users')
+    .where({ id: userId, is_active: true })
+    .first('id', 'full_name as fullName', 'email');
+
+  if (!user) return null;
+
+  const roles = await getRolesByUserId(user.id);
+
+  const token = jwt.sign(
+    {
+      sub: user.id,
+      email: user.email,
+      fullName: user.fullName,
+      roles
+    },
+    env.JWT_ACCESS_SECRET,
+    { expiresIn: env.JWT_ACCESS_EXPIRES }
+  );
+
+  return {
+    token,
+    user: {
+      id: user.id,
+      fullName: user.fullName,
+      email: user.email,
+      roles
+    }
+  };
+};

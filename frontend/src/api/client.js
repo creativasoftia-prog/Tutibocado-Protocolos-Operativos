@@ -25,6 +25,7 @@ const request = async (path, { method = 'GET', token, body } = {}) => {
 
 export const api = {
   login: (payload) => request('/auth/login', { method: 'POST', body: payload }),
+  renew: (token) => request('/auth/renew', { method: 'POST', token }),
   me: (token) => request('/auth/me', { token }),
   listUsers: (token) => request('/auth/users', { token }),
   createUser: (token, payload) => request('/auth/users', { method: 'POST', token, body: payload }),
