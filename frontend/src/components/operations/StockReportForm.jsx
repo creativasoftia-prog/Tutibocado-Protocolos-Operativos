@@ -8,7 +8,13 @@ export default function StockReportForm({ token, onClose, onCreated }) {
   const [types, setTypes] = useState([]);
   const [loadingTypes, setLoadingTypes] = useState(true);
   const [rows, setRows] = useState([{ id: Date.now(), stockTypeId: '', typeName: '', productName: '', quantity: '' }]);
-  const [reportDate, setReportDate] = useState(new Date().toISOString().slice(0, 10));
+  const [reportDate] = useState(() => {
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  });
   const [generalNotes, setGeneralNotes] = useState('');
   const [saving, setSaving] = useState(false);
 
@@ -95,15 +101,13 @@ export default function StockReportForm({ token, onClose, onCreated }) {
           {/* Fecha */}
           <div>
             <label className="block text-xs font-semibold text-gray-600 mb-1">
-              Fecha del reporte <span className="text-red-500">*</span>
+              Fecha para el día de hoy <span className="text-red-500">*</span>
             </label>
             <input
-              required
+              readOnly
               type="date"
-              className="w-full border border-cyan-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-300"
+              className="w-full border border-cyan-100 bg-cyan-50/50 text-cyan-800/70 rounded-xl px-3 py-2 text-sm focus:outline-none cursor-not-allowed select-none"
               value={reportDate}
-              onChange={(e) => setReportDate(e.target.value)}
-              max={new Date().toISOString().slice(0, 10)}
             />
           </div>
 
