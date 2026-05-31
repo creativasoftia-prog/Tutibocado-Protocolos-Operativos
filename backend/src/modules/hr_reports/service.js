@@ -1,5 +1,5 @@
 import { db, isPostgresClient } from '../../config/db.js';
-import { createNotificationsForEntry } from '../notifications/service.js';
+import { createNotificationsForEntry, createNotificationForUser } from '../notifications/service.js';
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -72,6 +72,21 @@ export const listReportsByEmployee = async (employeeId) => {
   return listReports({ employeeId });
 };
 
+export const listMyReports = async (submittedByUserId) => {
+  const rows = await db('hr_reports as r')
+    .leftJoin('employees as e', 'e.id', 'r.employee_id')
+    .select(
+      'r.*',
+      'e.employee_code as employee_code',
+      'e.full_name as employee_name',
+      'e.department as employee_department',
+      'e.branch as employee_branch'
+    )
+    .where('r.submitted_by_user_id', submittedByUserId)
+    .orderBy('r.created_at', 'desc');
+  return rows.map(mapRow);
+};
+
 export const getReportById = async (id) => {
   if (id == null || Number.isNaN(Number(id))) return null;
 
@@ -106,6 +121,7 @@ export const createReport = async (payload) => {
     .insert({
     report_number: reportNumber,
     employee_id: payload.employeeId,
+    submitted_by_user_id: payload.submittedByUserId || null,
     type: payload.type,
     subject: payload.subject.trim(),
     description: payload.description.trim(),
@@ -145,11 +161,24 @@ export const updateReportStatus = async (id, payload, reviewerUserId) => {
     updated_at: db.fn.now(),
   });
 
-  // Cuando el reporte es procesado, eliminar sus notificaciones para no acumular historial
+  // Cuando el reporte es procesado, eliminar las notificaciones internas para no acumular historial
   if (['revisado', 'aceptado', 'rechazado'].includes(payload.status)) {
     await db('notifications')
       .where({ entity_type: 'hr_report', entity_id: id })
       .delete();
+  }
+
+  // Notificar al usuario que envió el reporte sobre la resolución
+  if (['aceptado', 'rechazado'].includes(payload.status) && existing.submitted_by_user_id) {
+    const resolved = await getReportById(id);
+    const isApproved = payload.status === 'aceptado';
+    createNotificationForUser(existing.submitted_by_user_id, {
+      type: 'reporte',
+      title: isApproved ? `Tu reporte fue aprobado ✓` : `Tu reporte fue rechazado`,
+      body: `${resolved.subject} · ${payload.hrResponse?.trim() || (isApproved ? 'Aprobado por Capital Humano.' : 'Rechazado por Capital Humano.')}`,
+      entityType: 'hr_report',
+      entityId: id,
+    }).catch(() => {});
   }
 
   return getReportById(id);

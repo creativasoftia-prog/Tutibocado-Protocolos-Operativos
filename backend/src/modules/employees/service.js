@@ -2,6 +2,15 @@ import { db } from '../../config/db.js';
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
+const formatDate = (d) => {
+  if (!d) return null;
+  if (typeof d === 'string') return d.slice(0, 10);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 const mapRow = (row) => ({
   id: row.id,
   employeeCode: row.employee_code,
@@ -9,7 +18,7 @@ const mapRow = (row) => ({
   email: row.email || null,
   phone: row.phone || null,
   position: row.position || null,
-  hireDate: row.hire_date || null,
+  hireDate: formatDate(row.hire_date),
   isActive: row.is_active,
   notes: row.notes || null,
   userId: row.user_id || null,

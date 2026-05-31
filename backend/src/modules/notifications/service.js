@@ -18,10 +18,17 @@ const mapRow = (row) => ({
  * Se llama de forma fire-and-forget; los errores no deben romper el flujo principal.
  */
 export const createNotificationsForEntry = async ({ type, title, body, entityType, entityId }) => {
+  let targetRoles = [...NOTIFY_ROLES];
+
+  // Capital Humano solo debe recibir notificaciones de incidencias de personal (hr_report)
+  if (entityType !== 'hr_report') {
+    targetRoles = targetRoles.filter(role => role !== 'capital_humano');
+  }
+
   const users = await db('users as u')
     .innerJoin('user_roles as ur', 'ur.user_id', 'u.id')
     .innerJoin('roles as r', 'r.id', 'ur.role_id')
-    .whereIn('r.name', NOTIFY_ROLES)
+    .whereIn('r.name', targetRoles)
     .where('u.is_active', true)
     .distinct('u.id as userId')
     .select('u.id as userId');
@@ -58,13 +65,30 @@ export const getUnreadCount = async (userId) => {
 };
 
 export const markAsRead = async (notificationId, userId) => {
+  // Eliminar al leer: las notificaciones no se acumulan
   await db('notifications')
     .where({ id: notificationId, user_id: userId })
-    .update({ is_read: true });
+    .delete();
 };
 
 export const markAllAsRead = async (userId) => {
   await db('notifications')
-    .where({ user_id: userId, is_read: false })
-    .update({ is_read: true });
+    .where({ user_id: userId })
+    .delete();
+};
+
+/**
+ * Crea una notificación para un usuario específico (ej. respuesta a un reporte).
+ */
+export const createNotificationForUser = async (userId, { type, title, body, entityType, entityId }) => {
+  if (!userId) return;
+  await db('notifications').insert({
+    user_id: userId,
+    type,
+    title,
+    body: body || '',
+    entity_type: entityType,
+    entity_id: entityId,
+    is_read: false,
+  });
 };

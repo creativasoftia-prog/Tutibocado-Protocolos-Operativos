@@ -16,6 +16,7 @@ const REPORT_TYPES = [
   { value: 'falta', label: 'Falta / Ausencia' },
   { value: 'enfermedad', label: 'Enfermedad' },
   { value: 'permiso', label: 'Solicitud de permiso' },
+  { value: 'vacaciones', label: 'Vacaciones' },
   { value: 'situacion', label: 'Situación en tienda' },
   { value: 'otro', label: 'Otro motivo' },
 ];
@@ -41,6 +42,20 @@ export default function ReportForm({ token, onSuccess, onCancel }) {
   const setField = (key, value) => {
     setForm((prev) => ({ ...prev, [key]: value }));
     setErrors((prev) => ({ ...prev, [key]: '' }));
+  };
+
+  const handleTypeChange = (value) => {
+    setField('type', value);
+    if (value === 'vacaciones') {
+      setField('subject', 'Solicitud de vacaciones');
+      setField('description', 'Solicito mis días de vacaciones correspondientes al periodo actual. Fechas propuestas: del [Fecha inicio] al [Fecha fin]. Quedo a la espera de confirmación sobre la viabilidad por parte de la operación.');
+    } else {
+      if (form.type === 'vacaciones') {
+        // Clear them if switching away from vacaciones, only if they haven't been modified heavily
+        if (form.subject === 'Solicitud de vacaciones') setField('subject', '');
+        if (form.description.startsWith('Solicito mis días de vacaciones')) setField('description', '');
+      }
+    }
   };
 
   // ── Validar colaborador por código ────────────────────────────────────────────
@@ -204,7 +219,7 @@ export default function ReportForm({ token, onSuccess, onCancel }) {
             <button
               key={value}
               type="button"
-              onClick={() => setField('type', value)}
+              onClick={() => handleTypeChange(value)}
               className={`px-3 py-1.5 rounded-lg border text-sm font-medium transition-colors ${
                 form.type === value
                   ? 'bg-cyan-600 text-white border-cyan-600'

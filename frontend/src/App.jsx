@@ -1,12 +1,15 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ShieldCheck, LayoutPanelTop, Users, FileText, X } from 'lucide-react';
+import { ShieldCheck, LayoutPanelTop, Users, UserCheck, FileText, X, ClipboardList, BarChart2 } from 'lucide-react';
 import Dashboard from './components/Dashboard';
 import ProtocolDetail from './components/ProtocolDetail';
 import AuthView from './components/AuthView';
 import AdminPanel from './components/AdminPanel';
 import HRDashboard from './components/hr/HRDashboard';
+import MyReportsView from './components/hr/MyReportsView';
 import ReportForm from './components/hr/ReportForm';
+import ReportsView from './components/ReportsView';
 import NotificationBell from './components/NotificationBell';
+import SessionManager from './components/SessionManager';
 import { api } from './api/client';
 import { useToast } from './context/ToastContext';
 
@@ -19,18 +22,23 @@ function App() {
   const [users, setUsers] = useState([]);
   const [categories, setCategories] = useState([]);
   const [view, setView] = useState('dashboard');
+  const [reportsTab, setReportsTab] = useState('existencias');
+  const [myReportsTab, setMyReportsTab] = useState('incidencias');
   const [isLoading, setIsLoading] = useState(false);
   const [authError, setAuthError] = useState('');
   const [actionError, setActionError] = useState('');
   const [employees, setEmployees] = useState([]);
   const [showReportModal, setShowReportModal] = useState(false);
+  const [autoOpenReport, setAutoOpenReport] = useState(false);
   const toast = useToast();
 
   const isAdmin = useMemo(() => user?.roles?.includes('administrador'), [user]);
   const isCapitalHumano = useMemo(() => user?.roles?.includes('capital_humano'), [user]);
+  const isSucursal = useMemo(() => user?.roles?.includes('sucursal'), [user]);
+  const isSupervisor = useMemo(() => user?.roles?.includes('supervisor'), [user]);
   const canManageEmployees = useMemo(() => isAdmin || isCapitalHumano, [isAdmin, isCapitalHumano]);
   const canReceiveNotifications = useMemo(
-    () => user?.roles?.some((r) => ['administrador', 'capital_humano', 'supervisor'].includes(r)),
+    () => user?.roles?.some((r) => ['administrador', 'capital_humano', 'supervisor', 'sucursal'].includes(r)),
     [user]
   );
 
@@ -109,6 +117,11 @@ function App() {
     setEmployees([]);
     setSelectedProtocol(null);
     setView('dashboard');
+  };
+
+  const handleRenewToken = (newToken) => {
+    localStorage.setItem('tb_token', newToken);
+    setToken(newToken);
   };
 
   const refreshAdminData = async () => {
@@ -341,6 +354,8 @@ function App() {
 
   return (
     <div className="min-h-screen bg-[#ECFEFF] text-[#164E63]">
+      <SessionManager token={token} onRenew={handleRenewToken} onLogout={handleLogout} />
+      
       <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-cyan-100 shadow-sm px-6 py-4">
         <div className="max-w-[1500px] mx-auto flex items-center justify-between gap-4">
           <div
@@ -392,6 +407,14 @@ function App() {
                   <ShieldCheck size={16} /> Admin
                 </button>
                 <button
+                  onClick={() => { setSelectedProtocol(null); setView('reports'); }}
+                  className={`inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                    view === 'reports' ? 'bg-cyan-600 text-white' : 'text-cyan-800 hover:bg-cyan-50'
+                  }`}
+                >
+                  <BarChart2 size={16} /> Reportes
+                </button>
+                <button
                   onClick={() => {
                     setSelectedProtocol(null);
                     setView('hr');
@@ -414,6 +437,14 @@ function App() {
                   <LayoutPanelTop size={16} /> Protocolos
                 </button>
                 <button
+                  onClick={() => { setSelectedProtocol(null); setView('admin'); }}
+                  className={`inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                    view === 'admin' ? 'bg-cyan-600 text-white' : 'text-cyan-800 hover:bg-cyan-50'
+                  }`}
+                >
+                  <UserCheck size={16} /> Colaboradores
+                </button>
+                <button
                   onClick={() => { setSelectedProtocol(null); setView('hr'); }}
                   className={`inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
                     view === 'hr' ? 'bg-cyan-600 text-white' : 'text-cyan-800 hover:bg-cyan-50'
@@ -422,20 +453,85 @@ function App() {
                   <Users size={16} /> Capital Humano
                 </button>
               </div>
+            ) : isSupervisor ? (
+              <div className="inline-flex rounded-xl p-1 bg-white border border-cyan-100 shadow-sm">
+                <button
+                  onClick={() => { setSelectedProtocol(null); setView('dashboard'); }}
+                  className={`inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                    view === 'dashboard' ? 'bg-cyan-600 text-white' : 'text-cyan-800 hover:bg-cyan-50'
+                  }`}
+                >
+                  <LayoutPanelTop size={16} /> Protocolos
+                </button>
+                <button
+                  onClick={() => { setSelectedProtocol(null); setView('reports'); }}
+                  className={`inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                    view === 'reports' ? 'bg-cyan-600 text-white' : 'text-cyan-800 hover:bg-cyan-50'
+                  }`}
+                >
+                  <BarChart2 size={16} /> Reportes
+                </button>
+              </div>
+            ) : isSucursal ? (
+              <div className="inline-flex rounded-xl p-1 bg-white border border-cyan-100 shadow-sm">
+                <button
+                  onClick={() => { setSelectedProtocol(null); setView('dashboard'); }}
+                  className={`inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                    view === 'dashboard' ? 'bg-cyan-600 text-white' : 'text-cyan-800 hover:bg-cyan-50'
+                  }`}
+                >
+                  <LayoutPanelTop size={16} /> Protocolos
+                </button>
+                <button
+                  onClick={() => { setSelectedProtocol(null); setView('myreports'); }}
+                  className={`inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                    view === 'myreports' ? 'bg-cyan-600 text-white' : 'text-cyan-800 hover:bg-cyan-50'
+                  }`}
+                >
+                  <ClipboardList size={16} /> Mis Reportes
+                </button>
+              </div>
             ) : null}
 
-            {/* Campana de notificaciones para admin, capital_humano y supervisor */}
+            {/* Campana de notificaciones para admin, capital_humano, supervisor y sucursal */}
             {canReceiveNotifications && (
               <NotificationBell
                 token={token}
                 onNotificationClick={(n) => {
-                  // hr_report → lleva al panel de Capital Humano (solo quienes tienen acceso)
-                  if (n.entityType === 'hr_report' && (isAdmin || isCapitalHumano)) {
+                  // hr_report → admin/capital_humano van al panel HR; sucursal va a sus reportes
+                  if (n.entityType === 'hr_report') {
                     setSelectedProtocol(null);
-                    setView('hr');
+                    if (isAdmin || isCapitalHumano) setView('hr');
+                    else if (isSucursal) {
+                      setMyReportsTab('incidencias');
+                      setView('myreports');
+                    }
+                  }
+                  // stock_report → abrir existencias en el destino correcto
+                  if (n.entityType === 'stock_report') {
+                    setSelectedProtocol(null);
+                    if (isAdmin || isCapitalHumano || isSupervisor) {
+                      setReportsTab('existencias');
+                      setView('reports');
+                    } else if (isSucursal) {
+                      setMyReportsTab('existencias');
+                      setView('myreports');
+                    }
+                  }
+                  // operational_report → abrir operativos en el destino correcto
+                  if (n.entityType === 'operational_report') {
+                    setSelectedProtocol(null);
+                    if (isAdmin || isCapitalHumano || isSupervisor) {
+                      setReportsTab('operativos');
+                      setView('reports');
+                    } else if (isSucursal) {
+                      setMyReportsTab('operativos');
+                      setView('myreports');
+                    }
                   }
                   // protocol_incident → vuelve al dashboard de protocolos
                   if (n.entityType === 'protocol_incident') {
+                    setSelectedProtocol(null);
                     setView('dashboard');
                   }
                 }}
@@ -446,9 +542,9 @@ function App() {
             <button
               onClick={() => setShowReportModal(true)}
               className="inline-flex items-center gap-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl px-3 py-2 text-sm font-semibold shadow-sm transition-colors"
-              title="Enviar un reporte a Capital Humano"
+              title="Enviar una incidencia de personal"
             >
-              <FileText size={15} /> Reportar
+              <FileText size={15} /> Incidencia de Personal
             </button>
 
             <button
@@ -470,10 +566,17 @@ function App() {
           </div>
         ) : null}
 
-        {view === 'admin' && isAdmin ? (
+        {view === 'reports' && (isAdmin || isSupervisor || isCapitalHumano) ? (
+          <div className="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8">
+            <ReportsView token={token} isAdmin={isAdmin} initialTab={reportsTab} />
+          </div>
+        ) : null}
+
+        {view === 'admin' && (isAdmin || isCapitalHumano) ? (
           <div className="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8">
             <AdminPanel
               token={token}
+              isAdmin={isAdmin}
               roles={roles}
               users={users}
               protocols={protocols}
@@ -505,7 +608,18 @@ function App() {
           </div>
         ) : null}
 
-        {view !== 'admin' && view !== 'hr' && selectedProtocol ? (
+        {view === 'myreports' && isSucursal ? (
+          <div className="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8">
+            <MyReportsView 
+              token={token} 
+              initialTab={myReportsTab} 
+              autoOpenReport={autoOpenReport} 
+              onReportOpened={() => setAutoOpenReport(false)} 
+            />
+          </div>
+        ) : null}
+
+        {view !== 'admin' && view !== 'hr' && view !== 'myreports' && view !== 'reports' && selectedProtocol ? (
           <div className="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8">
             <ProtocolDetail
               protocol={selectedProtocol}
@@ -515,8 +629,17 @@ function App() {
           </div>
         ) : null}
 
-        {view !== 'admin' && view !== 'hr' && !selectedProtocol ? (
-          <Dashboard protocols={protocols} onSelect={setSelectedProtocol} />
+        {view !== 'admin' && view !== 'hr' && view !== 'myreports' && view !== 'reports' && !selectedProtocol ? (
+          <Dashboard 
+            protocols={protocols} 
+            onSelect={setSelectedProtocol} 
+            isSucursal={isSucursal} 
+            onOpenReportForm={() => {
+              setView('myreports');
+              setMyReportsTab('operativos');
+              setAutoOpenReport(true);
+            }} 
+          />
         ) : null}
       </main>
 
@@ -529,7 +652,7 @@ function App() {
           <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl">
             <div className="flex items-center justify-between px-6 py-4 border-b border-cyan-100">
               <h2 className="font-heading font-bold text-cyan-900 text-lg flex items-center gap-2">
-                <FileText size={18} /> Enviar reporte a Capital Humano
+                <FileText size={18} /> Incidencia de Personal
               </h2>
               <button type="button" onClick={() => setShowReportModal(false)} className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100">
                 <X size={18} />

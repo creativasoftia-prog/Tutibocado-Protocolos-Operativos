@@ -14,12 +14,12 @@ export const STATUS_CONFIG = {
     className: 'bg-sky-50 text-sky-700 border-sky-200',
   },
   aceptado: {
-    label: 'Aceptado',
+    label: 'Revisado · Aprobado',
     Icon: CheckCircle2,
     className: 'bg-emerald-50 text-emerald-700 border-emerald-200',
   },
   rechazado: {
-    label: 'Rechazado',
+    label: 'Revisado · Rechazado',
     Icon: XCircle,
     className: 'bg-rose-50 text-rose-700 border-rose-200',
   },

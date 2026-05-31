@@ -24,8 +24,9 @@ import ProtocolIncidentsPanel from '../protocols/ProtocolIncidentsPanel';
 const PAGE_SIZE = 12;
 
 const STAT_DEFS = [
-  { key: 'pendiente', label: 'Pendientes', Icon: Clock,          color: 'text-amber-600',    bg: 'bg-amber-50',    border: 'border-amber-200' },
-  { key: 'revisado',  label: 'Revisados',  Icon: Eye,            color: 'text-sky-600',      bg: 'bg-sky-50',      border: 'border-sky-200' },
+  { key: 'pendiente', label: 'Pendientes',        Icon: Clock,          color: 'text-amber-600',   bg: 'bg-amber-50',   border: 'border-amber-200' },
+  { key: 'aceptado',  label: 'Revisados · Aprobados', Icon: CheckCircle2,   color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200' },
+  { key: 'rechazado', label: 'Revisados · Rechazados', Icon: Eye,           color: 'text-rose-600',    bg: 'bg-rose-50',    border: 'border-rose-200' },
 ];
 
 export default function HRDashboard({ token }) {
@@ -59,7 +60,7 @@ export default function HRDashboard({ token }) {
     try {
       await api.updateHrReportStatus(token, reportId, payload);
       await loadReports();
-      toast.success('Reporte marcado como revisado.');
+      toast.success(payload.status === 'aceptado' ? 'Reporte aprobado correctamente.' : 'Reporte rechazado correctamente.');
     } catch (error) {
       toast.error(error.message || 'No se pudo actualizar el reporte');
       throw error;
@@ -127,7 +128,7 @@ export default function HRDashboard({ token }) {
               <Users size={22} />
             </div>
             <div>
-              <h2 className="font-heading font-bold text-xl">Capital Humano</h2>
+              <h2 className="font-heading font-bold text-xl">Incidencias de Personal</h2>
               <p className="text-cyan-200 text-sm">Gestión de reportes y justificantes de los colaboradores</p>
             </div>
           </div>
@@ -207,7 +208,7 @@ export default function HRDashboard({ token }) {
               activeView === 'reports' ? 'bg-cyan-600 text-white' : 'text-slate-700 hover:bg-cyan-50'
             }`}
           >
-            Reportes RH
+            Incidencias de Personal
           </button>
           <button
             type="button"

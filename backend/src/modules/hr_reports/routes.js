@@ -5,6 +5,7 @@ import {
   createReport,
   deleteReport,
   getReportById,
+  listMyReports,
   listReports,
   listReportsByEmployee,
   updateReportStatus,
@@ -22,6 +23,12 @@ hrReportsRouter.get('/', requireAnyRole('administrador', 'capital_humano'), asyn
     status: status || undefined,
     employeeId: employeeId ? parseInt(employeeId, 10) : undefined,
   });
+  return res.json(reports);
+});
+
+// ── Mis reportes (usuario autenticado — debe ir antes de /:id)
+hrReportsRouter.get('/my', async (req, res) => {
+  const reports = await listMyReports(req.user.sub);
   return res.json(reports);
 });
 
@@ -44,7 +51,7 @@ hrReportsRouter.get('/:id', async (req, res) => {
 
 const createReportSchema = z.object({
   employeeCode: z.string().regex(/^TB-[A-Z]{1,4}-\d{3,6}$/i, 'El código de colaborador debe tener formato TB-XXX-001'),
-  type: z.enum(['falta', 'enfermedad', 'situacion', 'permiso', 'otro'], { message: 'Selecciona un tipo de reporte válido' }),
+  type: z.enum(['falta', 'enfermedad', 'situacion', 'permiso', 'vacaciones', 'otro'], { message: 'Selecciona un tipo de reporte válido' }),
   subject: z.string().min(5, 'El asunto debe tener al menos 5 caracteres').max(220, 'El asunto no puede exceder 220 caracteres'),
   description: z.string().min(10, 'La descripción debe tener al menos 10 caracteres'),
   incidentDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'La fecha debe estar en formato YYYY-MM-DD'),
@@ -70,6 +77,7 @@ hrReportsRouter.post('/', async (req, res) => {
   try {
     const report = await createReport({
       employeeId: employee.id,
+      submittedByUserId: req.user.sub,
       type: parsed.data.type,
       subject: parsed.data.subject,
       description: parsed.data.description,
